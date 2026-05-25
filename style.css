@@ -148,13 +148,19 @@ body {
 
 /* RESPONSIVE DESIGN (Actual Mobile Viewports) */
 @media (max-width: 500px) {
+  html, body {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
   body {
     background-color: var(--background);
+    display: block; /* Mobil cihazda flex dikey hizalamayı devre dışı bırakıyoruz */
   }
 
   .phone-wrapper {
     width: 100vw;
-    height: 100vh;
     height: 100dvh;
     border: none;
     border-radius: 0;
