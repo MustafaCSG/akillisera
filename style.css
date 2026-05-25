@@ -155,6 +155,7 @@ body {
   .phone-wrapper {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     border: none;
     border-radius: 0;
     box-shadow: none;
@@ -466,7 +467,7 @@ body {
 /* 3. MAIN DASHBOARD CONTENT AREA & SCREEN */
 .screen-main-content {
   flex: 1;
-  padding-bottom: 90px;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
   /* Spacer for bottom nav */
   overflow-y: auto;
 }
@@ -1372,6 +1373,7 @@ body {
   left: 0;
   right: 0;
   height: 80px;
+  height: calc(80px + env(safe-area-inset-bottom));
   background: white;
   border-top: 1px solid var(--border);
   box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.04);
@@ -1380,7 +1382,7 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 1.5rem 0.5rem;
+  padding: 0 1.5rem calc(0.5rem + env(safe-area-inset-bottom));
   z-index: 100;
 }
 
@@ -1825,7 +1827,7 @@ body {
   background: white;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  padding: 1.2rem 1.5rem 2.2rem;
+  padding: 1.2rem 1.5rem calc(2.2rem + env(safe-area-inset-bottom));
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
   max-height: 85%;
