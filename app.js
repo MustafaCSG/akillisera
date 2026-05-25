@@ -34,14 +34,18 @@ function initApp() {
     };
 
     let db = null;
+    let auth = null;
     let useFirebase = false;
 
     if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
       try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
+        if (typeof firebase.auth === 'function') {
+          auth = firebase.auth();
+        }
         useFirebase = true;
-        console.log("Firebase RTDB successfully initialized.");
+        console.log("Firebase RTDB and Authentication successfully initialized.");
       } catch (err) {
         console.error("Firebase initialization failed, falling back to Simulation mode:", err);
       }
@@ -225,36 +229,113 @@ function initApp() {
   // Initial Comfort Scores calculation
   updateAllGauges();
 
-  // --- 1. SPLASH SCREEN PROGRESS SIMULATION ---
+  // Helper to dynamically update the profile name based on signed-in user
+  function updateProfileUI(email) {
+    const profileNameEl = document.querySelector(".profile-name");
+    if (profileNameEl) {
+      const namePart = email.split('@')[0];
+      const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      profileNameEl.innerText = capitalized;
+    }
+  }
+
+  // --- 1. SPLASH SCREEN PROGRESS SIMULATION & AUTH OBSERVER ---
   setTimeout(() => {
     if (splashProgress) {
       splashProgress.style.width = "100%";
     }
   }, 100);
 
-  // Transition from Splash to Login after 2.6 seconds
+  let hasSession = false;
+  if (useFirebase && auth) {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        hasSession = true;
+        currentUser.email = user.email;
+        updateProfileUI(user.email);
+        console.log("Oturum açık:", user.email);
+      } else {
+        hasSession = false;
+      }
+    });
+  }
+
+  // Transition from Splash to Login or Dashboard after 2.6 seconds
   setTimeout(() => {
     screenSplash.classList.remove("active");
-    screenLogin.classList.add("active");
+    if (hasSession) {
+      screenMain.classList.add("active");
+      showToast("Hoş Geldiniz", `${currentUser.email} olarak giriş yapıldı.`, "shield-check");
+    } else {
+      screenLogin.classList.add("active");
+    }
   }, 2600);
 
 
   // --- 2. LOGIN & LOGOUT FLOW ---
   btnLogin.addEventListener("click", () => {
     const emailVal = document.getElementById("email").value;
-    if (emailVal.trim() === "") {
-      showToast("Hata", "Lütfen geçerli bir e-posta adresi girin.", "alert-triangle");
+    const passwordVal = document.getElementById("password").value;
+
+    if (emailVal.trim() === "" || passwordVal.trim() === "") {
+      showToast("Hata", "E-posta ve şifre alanları boş bırakılamaz.", "alert-triangle");
       return;
     }
 
-    // Animate transition to Main Dashboard
-    screenLogin.classList.remove("active");
-    screenMain.classList.add("active");
-
-    showToast("Giriş Başarılı", "Akıllı Sera portalına hoş geldiniz!", "shield-check");
+    if (useFirebase && auth) {
+      showToast("Giriş Yapılıyor", "Firebase kimlik doğrulaması yapılıyor...", "loader");
+      
+      auth.signInWithEmailAndPassword(emailVal, passwordVal)
+        .then((userCredential) => {
+          currentUser.email = userCredential.user.email;
+          updateProfileUI(userCredential.user.email);
+          
+          screenLogin.classList.remove("active");
+          screenMain.classList.add("active");
+          showToast("Giriş Başarılı", "Akıllı Sera portalına hoş geldiniz!", "shield-check");
+        })
+        .catch((error) => {
+          console.warn("Sign in failed, trying registration:", error);
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+            // User does not exist (or first login), auto-register them
+            showToast("Kayıt Yapılıyor", "Yeni hesap oluşturuluyor...", "user-plus");
+            auth.createUserWithEmailAndPassword(emailVal, passwordVal)
+              .then((userCredential) => {
+                currentUser.email = userCredential.user.email;
+                updateProfileUI(userCredential.user.email);
+                
+                screenLogin.classList.remove("active");
+                screenMain.classList.add("active");
+                showToast("Hesap Oluşturuldu", "Yeni hesabınız başarıyla oluşturuldu ve giriş yapıldı!", "user-check");
+              })
+              .catch((regError) => {
+                showToast("Kayıt Hatası", regError.message, "alert-triangle");
+              });
+          } else {
+            showToast("Giriş Hatası", error.message, "alert-triangle");
+          }
+        });
+    } else {
+      // Offline Simulation Fallback
+      currentUser.email = emailVal;
+      updateProfileUI(emailVal);
+      screenLogin.classList.remove("active");
+      screenMain.classList.add("active");
+      showToast("Giriş Başarılı", "Simülasyon Modu: Giriş yapıldı.", "shield-check");
+    }
   });
 
   btnLogout.addEventListener("click", () => {
+    if (useFirebase && auth) {
+      auth.signOut()
+        .then(() => {
+          showToast("Çıkış Yapıldı", "Oturum güvenli bir şekilde kapatıldı.", "log-out");
+        })
+        .catch((err) => {
+          console.error("Sign out error:", err);
+        });
+    }
+
     // Reset inputs & navigation
     screenMain.classList.remove("active");
     screenLogin.classList.add("active");
