@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akıllı Sera - Mobil Kontrol ve Takip Sistemi</title>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+  <!-- SMARTPHONE SIMULATOR FRAME -->
+  <div class="phone-wrapper">
+    <div class="phone-notch"></div>
+    <div class="phone-home-indicator"></div>
+
+    <!-- PHONE SCREEN -->
+    <div class="phone-screen" id="app-container">
+
+      <!-- 0. TOAST NOTIFICATION CONTAINER -->
+      <div id="app-toast" class="toast-container">
+        <div class="toast-icon">
+          <i data-lucide="bell"></i>
+        </div>
+        <div class="toast-text">
+          <span class="toast-title" id="toast-title">Bildirim</span>
+          <span class="toast-msg" id="toast-msg">Sistem durumu güncellendi.</span>
+        </div>
+      </div>
+
+      <!-- 1. SPLASH SCREEN -->
+      <div class="app-screen active" id="screen-splash">
+        <div class="splash-logo-container">
+          <div class="splash-logo-bg">
+            <i class="logo" data-lucide="leaf"></i>
+          </div>
+          <div class="wifi-badge">
+            <i data-lucide="wifi" style="width: 20px; height: 20px; color: white;"></i>
+          </div>
+        </div>
+        <h1 class="splash-title">Akıllı Sera</h1>
+        <h2 class="splash-subtitle">Mobil Portal</h2>
+        <p class="splash-tagline">IoT Bitki Takip Sistemi</p>
+        <div class="splash-progress-bar">
+          <div class="splash-progress-fill" id="splash-progress"></div>
+        </div>
+      </div>
+
+      <!-- 2. LOGIN SCREEN -->
+      <div class="app-screen" id="screen-login">
+        <div class="login-header">
+          <div class="login-logo">
+            <i data-lucide="leaf"></i>
+          </div>
+          <h1>Akıllı Sera</h1>
+          <p class="splash-tagline" style="margin-top: 0.4rem;">Mobil Kontrol Paneli</p>
+        </div>
+
+        <div class="login-card">
+          <h2>Giriş Yap</h2>
+
+          <div class="form-group">
+            <label for="email">E-Posta Adresi</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="email" placeholder="isim@sera.com" value="akilli@sera.com">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.6rem;">
+            <label for="password">Şifre</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="password" placeholder="••••••••" value="123456">
+            </div>
+          </div>
+
+          <div class="forgot-btn">
+            <a href="#" onclick="alert('Şifre sıfırlama bağlantısı e-postanıza gönderilecektir (Simülasyon).')">Şifremi
+              Unuttum</a>
+          </div>
+
+          <button class="login-btn" id="btn-login">Giriş Yap</button>
+
+          <div class="signup-footer">
+            Hesabınız yok mu? <button onclick="alert('Yeni hesap oluşturma formu (Simülasyon).')">Hesap Aç</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. MAIN DASHBOARD WRAPPER SCREEN -->
+      <div class="app-screen" id="screen-main">
+
+        <div class="screen-main-content">
+
+          <!-- MAIN CURVED HEADER -->
+          <header class="app-header">
+            <div class="header-top">
+              <div>
+                <h1>Akıllı Sera Portal</h1>
+                <p>Gerçek Zamanlı IoT Takip</p>
+              </div>
+              <div class="avatar-box">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+                  alt="Profil Resmi">
+              </div>
+            </div>
+            <div class="system-status-container">
+              <div class="system-status-badge">
+                <span class="status-dot normal" id="system-status-dot"></span>
+                <span id="system-status-text">Tüm Sistemler: Çalışıyor</span>
+              </div>
+            </div>
+          </header>
+
+          <!-- PANELS SECTION (TABS CONTROL THIS CONTENT) -->
+
+          <!-- TAB PANEL A: DASHBOARD -->
+          <div class="tab-panel" id="panel-dashboard">
+
+            <!-- FRAME 1: ORTAM VERİLERİ (ENVIRONMENT DATA) -->
+            <section class="frame-group">
+              <div class="frame-title">
+                <i data-lucide="wind"></i>
+                <span>Ortam Ölçümleri</span>
+              </div>
+              <div class="grid-cards">
+
+                <!-- Card: Ortam Sıcaklığı -->
+                <div class="sensor-card interactive-sensor-card" id="sensor-card-ortamTemp">
+                  <div class="card-main-body">
+                    <!-- Left Side: Icon and values -->
+                    <div class="card-body-left">
+                      <div class="card-top">
+                        <div class="sensor-icon-box temp-box">
+                          <i data-lucide="thermometer"></i>
+                        </div>
+                      </div>
+                      <span class="sensor-label">Ortam Sıcaklığı</span>
+                      <div class="sensor-value-container">
+                        <span class="sensor-value" id="val-ortam-temp">24.8</span>
+                        <span class="sensor-unit">°C</span>
+                        <span class="card-badge badge-normal" id="badge-ortam-temp">Normal</span>
+                      </div>
+                    </div>
+
+                    <!-- Right Side: Mini Progress Gauge -->
+                    <div class="card-body-right">
+                      <span class="mini-gauge-title">Gün İçi Ort.</span>
+                      <div class="mini-gauge-wrapper">
+                        <svg viewBox="0 0 100 55" class="mini-gauge-svg">
+                          <!-- Background transparent track segments (Red, Yellow, Green) -->
+                          <path d="M 15 45 A 35 35 0 0 1 32.5 14.7" fill="none" stroke="#ff4d4d" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+                          <path d="M 32.5 14.7 A 35 35 0 0 1 67.5 14.7" fill="none" stroke="#ffc107"
+                            stroke-opacity="0.15" stroke-width="8" />
+                          <path d="M 67.5 14.7 A 35 35 0 0 1 85 45" fill="none" stroke="#2ec4b6" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+
+                          <!-- Progress stroke -->
+                          <path class="gauge-fill-path" id="gauge-fill-ortam-temp" d="M 15 45 A 35 35 0 0 1 85 45"
+                            fill="none" stroke="#2ec4b6" stroke-width="8" stroke-linecap="round" stroke-dasharray="110"
+                            stroke-dashoffset="15" />
+                        </svg>
+                        <div class="mini-gauge-text">
+                          <span class="mini-gauge-score" id="score-ortam-temp">24.8°C</span>
+                          <span class="mini-gauge-status" id="status-ortam-temp">İyi</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card: Ortam Nemi -->
+                <div class="sensor-card interactive-sensor-card" id="sensor-card-ortamHumid">
+                  <div class="card-main-body">
+                    <!-- Left Side: Icon and values -->
+                    <div class="card-body-left">
+                      <div class="card-top">
+                        <div class="sensor-icon-box humid-box">
+                          <i data-lucide="droplets"></i>
+                        </div>
+                      </div>
+                      <span class="sensor-label">Ortam Nemi</span>
+                      <div class="sensor-value-container">
+                        <span class="sensor-value" id="val-ortam-humid">62</span>
+                        <span class="sensor-unit">%</span>
+                        <span class="card-badge badge-normal" id="badge-ortam-humid">Normal</span>
+                      </div>
+                    </div>
+
+                    <!-- Right Side: Mini Progress Gauge -->
+                    <div class="card-body-right">
+                      <span class="mini-gauge-title">Gün İçi Ort.</span>
+                      <div class="mini-gauge-wrapper">
+                        <svg viewBox="0 0 100 55" class="mini-gauge-svg">
+                          <path d="M 15 45 A 35 35 0 0 1 32.5 14.7" fill="none" stroke="#ff4d4d" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+                          <path d="M 32.5 14.7 A 35 35 0 0 1 67.5 14.7" fill="none" stroke="#ffc107"
+                            stroke-opacity="0.15" stroke-width="8" />
+                          <path d="M 67.5 14.7 A 35 35 0 0 1 85 45" fill="none" stroke="#2ec4b6" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+
+                          <path class="gauge-fill-path" id="gauge-fill-ortam-humid" d="M 15 45 A 35 35 0 0 1 85 45"
+                            fill="none" stroke="#2ec4b6" stroke-width="8" stroke-linecap="round" stroke-dasharray="110"
+                            stroke-dashoffset="20" />
+                        </svg>
+                        <div class="mini-gauge-text">
+                          <span class="mini-gauge-score" id="score-ortam-humid">%62</span>
+                          <span class="mini-gauge-status" id="status-ortam-humid">İyi</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- FRAME 2: SU VERİLERİ (WATER DATA) -->
+            <section class="frame-group">
+              <div class="frame-title">
+                <i data-lucide="droplet"></i>
+                <span>Su Ölçümleri</span>
+              </div>
+              <div class="grid-cards">
+
+                <!-- Card: Su Besin Değeri (TDS) -->
+                <div class="sensor-card interactive-sensor-card" id="sensor-card-suTds">
+                  <div class="card-main-body">
+                    <!-- Left Side: Icon and values -->
+                    <div class="card-body-left">
+                      <div class="card-top">
+                        <div class="sensor-icon-box tds-box">
+                          <i data-lucide="beaker"></i>
+                        </div>
+                      </div>
+                      <span class="sensor-label">Su Besin Değeri</span>
+                      <div class="sensor-value-container">
+                        <span class="sensor-value" id="val-su-tds">780</span>
+                        <span class="sensor-unit">ppm</span>
+                        <span class="card-badge badge-normal" id="badge-su-tds">Optimal</span>
+                      </div>
+                    </div>
+
+                    <!-- Right Side: Mini Progress Gauge -->
+                    <div class="card-body-right">
+                      <span class="mini-gauge-title">Gün İçi Ort.</span>
+                      <div class="mini-gauge-wrapper">
+                        <svg viewBox="0 0 100 55" class="mini-gauge-svg">
+                          <path d="M 15 45 A 35 35 0 0 1 32.5 14.7" fill="none" stroke="#ff4d4d" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+                          <path d="M 32.5 14.7 A 35 35 0 0 1 67.5 14.7" fill="none" stroke="#ffc107"
+                            stroke-opacity="0.15" stroke-width="8" />
+                          <path d="M 67.5 14.7 A 35 35 0 0 1 85 45" fill="none" stroke="#2ec4b6" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+
+                          <path class="gauge-fill-path" id="gauge-fill-su-tds" d="M 15 45 A 35 35 0 0 1 85 45"
+                            fill="none" stroke="#2ec4b6" stroke-width="8" stroke-linecap="round" stroke-dasharray="110"
+                            stroke-dashoffset="10" />
+                        </svg>
+                        <div class="mini-gauge-text">
+                          <span class="mini-gauge-score" id="score-su-tds">780 ppm</span>
+                          <span class="mini-gauge-status" id="status-su-tds">İyi</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card: Su Sıcaklığı -->
+                <div class="sensor-card interactive-sensor-card" id="sensor-card-suTemp">
+                  <div class="card-main-body">
+                    <!-- Left Side: Icon and values -->
+                    <div class="card-body-left">
+                      <div class="card-top">
+                        <div class="sensor-icon-box ph-box">
+                          <i data-lucide="thermometer-sun"></i>
+                        </div>
+                      </div>
+                      <span class="sensor-label">Su Sıcaklığı</span>
+                      <div class="sensor-value-container">
+                        <span class="sensor-value" id="val-su-temp">21.5</span>
+                        <span class="sensor-unit">°C</span>
+                        <span class="card-badge badge-normal" id="badge-su-temp">Normal</span>
+                      </div>
+                    </div>
+
+                    <!-- Right Side: Mini Progress Gauge -->
+                    <div class="card-body-right">
+                      <span class="mini-gauge-title">Gün İçi Ort.</span>
+                      <div class="mini-gauge-wrapper">
+                        <svg viewBox="0 0 100 55" class="mini-gauge-svg">
+                          <path d="M 15 45 A 35 35 0 0 1 32.5 14.7" fill="none" stroke="#ff4d4d" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+                          <path d="M 32.5 14.7 A 35 35 0 0 1 67.5 14.7" fill="none" stroke="#ffc107"
+                            stroke-opacity="0.15" stroke-width="8" />
+                          <path d="M 67.5 14.7 A 35 35 0 0 1 85 45" fill="none" stroke="#2ec4b6" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+
+                          <path class="gauge-fill-path" id="gauge-fill-su-temp" d="M 15 45 A 35 35 0 0 1 85 45"
+                            fill="none" stroke="#2ec4b6" stroke-width="8" stroke-linecap="round" stroke-dasharray="110"
+                            stroke-dashoffset="15" />
+                        </svg>
+                        <div class="mini-gauge-text">
+                          <span class="mini-gauge-score" id="score-su-temp">21.5°C</span>
+                          <span class="mini-gauge-status" id="status-su-temp">İyi</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- FRAME 3: CİHAZ KONTROLLERİ (PUMPS, FANS, LEDS) -->
+            <section class="frame-group" style="margin-bottom: 2rem;">
+              <div class="frame-title">
+                <i data-lucide="sliders"></i>
+                <span>Sistem Kontrolü</span>
+              </div>
+
+              <div class="control-frame-container">
+
+                <!-- Tam Otomatik Row -->
+                <div class="device-row auto-mode-row" id="row-auto">
+                  <div class="device-info">
+                    <div class="device-icon-box auto-icon">
+                      <i data-lucide="cpu"></i>
+                    </div>
+                    <div class="device-text">
+                      <span class="device-name">Tam Otomatik Mod</span>
+                      <span class="device-status" id="status-auto">Pasif</span>
+                    </div>
+                  </div>
+                  <label class="ios-switch">
+                    <input type="checkbox" id="switch-auto">
+                    <span class="ios-slider"></span>
+                  </label>
+                </div>
+
+                <!-- Pompa 1 Row -->
+                <div class="device-row" id="row-pompa1">
+                  <div class="device-info">
+                    <div class="device-icon-box pump-water">
+                      <i data-lucide="droplet"></i>
+                    </div>
+                    <div class="device-text">
+                      <span class="device-name">Pompa 1 (Besin Pompası)</span>
+                      <span class="device-status" id="status-pompa1">Kapalı</span>
+                    </div>
+                  </div>
+                  <label class="ios-switch">
+                    <input type="checkbox" id="switch-pompa1">
+                    <span class="ios-slider"></span>
+                  </label>
+                </div>
+
+                <!-- Pompa 2 Row -->
+                <div class="device-row" id="row-pompa2">
+                  <div class="device-info">
+                    <div class="device-icon-box pump-water">
+                      <i data-lucide="refresh-cw"></i>
+                    </div>
+                    <div class="device-text">
+                      <span class="device-name">Pompa 2 (Su Sirkülasyonu)</span>
+                      <span class="device-status" id="status-pompa2">Kapalı</span>
+                    </div>
+                  </div>
+                  <label class="ios-switch">
+                    <input type="checkbox" id="switch-pompa2">
+                    <span class="ios-slider"></span>
+                  </label>
+                </div>
+
+                <!-- Pompa 3 Row -->
+                <div class="device-row" id="row-pompa3">
+                  <div class="device-info">
+                    <div class="device-icon-box pump-water">
+                      <i data-lucide="test-tube"></i>
+                    </div>
+                    <div class="device-text">
+                      <span class="device-name">Pompa 3 (pH Dengeleyici)</span>
+                      <span class="device-status" id="status-pompa3">Kapalı</span>
+                    </div>
+                  </div>
+                  <label class="ios-switch">
+                    <input type="checkbox" id="switch-pompa3">
+                    <span class="ios-slider"></span>
+                  </label>
+                </div>
+
+                <!-- Fan Sistemi Row -->
+                <div class="device-row" id="row-fan">
+                  <div class="device-info">
+                    <div class="device-icon-box fan-icon">
+                      <i data-lucide="fan"></i>
+                    </div>
+                    <div class="device-text">
+                      <span class="device-name">Fan Sistemi (Havalandırma)</span>
+                      <span class="device-status" id="status-fan">Kapalı</span>
+                    </div>
+                  </div>
+                  <label class="ios-switch">
+                    <input type="checkbox" id="switch-fan">
+                    <span class="ios-slider"></span>
+                  </label>
+                </div>
+
+                <!-- LED Aydınlatma Row -->
+                <div class="device-row" id="row-led">
+                  <div class="device-info">
+                    <div class="device-icon-box led-light">
+                      <i data-lucide="sun"></i>
+                    </div>
+                    <div class="device-text">
+                      <span class="device-name">LED Aydınlatma (Gelişim Işığı)</span>
+                      <span class="device-status" id="status-led">Kapalı</span>
+                    </div>
+                  </div>
+                  <label class="ios-switch">
+                    <input type="checkbox" id="switch-led">
+                    <span class="ios-slider"></span>
+                  </label>
+                </div>
+
+              </div>
+            </section>
+
+          </div>
+
+          <!-- TAB PANEL B: CHARTS (ANALİZ) -->
+          <div class="tab-panel" id="panel-charts" style="display: none;">
+
+            <div class="charts-container">
+
+              <!-- Chart 1: Ortam Sıcaklık Analizi -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <span class="chart-title">Ortam Sıcaklık Analizi (Haftalık)</span>
+                  <span class="chart-trend trend-up">
+                    <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
+                    <span>Kararlı</span>
+                  </span>
+                </div>
+
+                <div class="bar-chart-wrapper">
+                  <div class="bar-chart-columns">
+                    <!-- Pazartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">22.4°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Pzt</span>
+                    </div>
+                    <!-- Salı -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">23.8°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Sal</span>
+                    </div>
+                    <!-- Çarşamba -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">25.1°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Çar</span>
+                    </div>
+                    <!-- Perşembe -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">24.5°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Per</span>
+                    </div>
+                    <!-- Cuma -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">26.2°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cum</span>
+                    </div>
+                    <!-- Cumartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">25.5°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cmt</span>
+                    </div>
+                    <!-- Pazar -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamTemp">24.8°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamTemp temp-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Paz</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chart 2: Ortam Nemi Analizi -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <span class="chart-title">Ortam Nemi Analizi (Haftalık)</span>
+                  <span class="chart-trend trend-up">
+                    <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
+                    <span>Optimal</span>
+                  </span>
+                </div>
+
+                <div class="bar-chart-wrapper">
+                  <div class="bar-chart-columns">
+                    <!-- Pazartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%58</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Pzt</span>
+                    </div>
+                    <!-- Salı -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%62</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Sal</span>
+                    </div>
+                    <!-- Çarşamba -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%65</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Çar</span>
+                    </div>
+                    <!-- Perşembe -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%60</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Per</span>
+                    </div>
+                    <!-- Cuma -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%63</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cum</span>
+                    </div>
+                    <!-- Cumartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%61</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cmt</span>
+                    </div>
+                    <!-- Pazar -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-ortamHumid">%62</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-ortamHumid humid-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Paz</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chart 3: Su Besin Değeri (TDS) Analizi -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <span class="chart-title">Su Besin Değeri (TDS) Analizi (Haftalık)</span>
+                  <span class="chart-trend trend-up">
+                    <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
+                    <span>Muntazam</span>
+                  </span>
+                </div>
+
+                <div class="bar-chart-wrapper">
+                  <div class="bar-chart-columns">
+                    <!-- Pazartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">740 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Pzt</span>
+                    </div>
+                    <!-- Salı -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">780 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Sal</span>
+                    </div>
+                    <!-- Çarşamba -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">795 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Çar</span>
+                    </div>
+                    <!-- Perşembe -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">770 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Per</span>
+                    </div>
+                    <!-- Cuma -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">790 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cum</span>
+                    </div>
+                    <!-- Cumartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">785 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cmt</span>
+                    </div>
+                    <!-- Pazar -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTds">780 ppm</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTds tds-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Paz</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chart 4: Su Sıcaklığı Analizi -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <span class="chart-title">Su Sıcaklığı Analizi (Haftalık)</span>
+                  <span class="chart-trend trend-down">
+                    <i data-lucide="trending-down" style="width: 16px; height: 16px;"></i>
+                    <span>Stabil</span>
+                  </span>
+                </div>
+
+                <div class="bar-chart-wrapper">
+                  <div class="bar-chart-columns">
+                    <!-- Pazartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">20.8°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Pzt</span>
+                    </div>
+                    <!-- Salı -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">21.2°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Sal</span>
+                    </div>
+                    <!-- Çarşamba -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">21.8°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Çar</span>
+                    </div>
+                    <!-- Perşembe -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">21.5°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Per</span>
+                    </div>
+                    <!-- Cuma -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">21.9°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cum</span>
+                    </div>
+                    <!-- Cumartesi -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">21.6°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Cmt</span>
+                    </div>
+                    <!-- Pazar -->
+                    <div class="bar-column">
+                      <div class="bar-value-bubble bar-bubble-suTemp">21.5°C</div>
+                      <div class="bar-fill-container">
+                        <div class="bar-fill bar-fill-suTemp water-bar-fill" style="height: 0%;"></div>
+                      </div>
+                      <span class="bar-label">Paz</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB PANEL C: YODA LEAF HEALTH SCANNER -->
+          <div class="tab-panel" id="panel-yoda" style="display: none;">
+
+            <div class="yoda-container">
+              <!-- Live Mock Camera View -->
+              <div class="camera-card">
+                <!-- Fallback live green leaf visual using a crisp picture -->
+                <img id="plant-scan-img" class="camera-preview"
+                  src="https://images.unsplash.com/photo-1624421719748-179e1a8e956d?auto=format&fit=crop&q=80&w=600"
+                  alt="Plant Leaves">
+
+                <!-- Bounding Box Visual Overlay -->
+                <div id="yoda-box" class="bounding-box">
+                  <div class="box-label">Sağlıklı Yaprak • 96.4%</div>
+                  <div class="box-corners"></div>
+                </div>
+
+                <!-- Camera grid overlay -->
+                <div class="camera-overlay">
+                  <div class="camera-grid">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                  </div>
+                  <div class="scanning-bar" id="yoda-scan-bar"></div>
+                </div>
+
+                <!-- Loading overlay -->
+                <div class="scanner-loader" id="yoda-loader">
+                  <div class="spinner"></div>
+                  <p>YODA Yaprak Analizi Yapılıyor...</p>
+                </div>
+              </div>
+
+              <!-- Scanner tips (Visible before scan) -->
+              <div class="scanner-info-card" id="yoda-tips">
+                <div class="scanner-info-title">
+                  <i data-lucide="info" style="color: var(--secondary); width: 20px; height: 20px;"></i>
+                  <span>YODA Analiz İpuçları</span>
+                </div>
+                <ul>
+                  <li>Kamerayı yapraklara tam dik açıdan yaklaştırın.</li>
+                  <li>Yeterli aydınlatma ve gölgesiz bir ortam sağlayın.</li>
+                  <li>Yaprağı arka plandan net bir şekilde ayırın.</li>
+                  <li>Netleme bittikten sonra "Bitkiyi Tara (YODA)" butonuna basın.</li>
+                </ul>
+              </div>
+
+              <!-- Scanner Detection Results (Visible after scan) -->
+              <div class="scanner-results" id="yoda-results">
+                <div class="results-header">
+                  <i data-lucide="check-circle" style="color: #2e7d32; width: 22px; height: 22px;"></i>
+                  <span>Teşhis Sonuçları</span>
+                </div>
+
+                <div class="result-item">
+                  <span class="result-tag healthy">
+                    <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                    Yaprak Rengi: Normal
+                  </span>
+                  <span class="result-confidence">97.2% Güven</span>
+                </div>
+
+                <div class="result-item">
+                  <span class="result-tag healthy">
+                    <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                    Klorofil Dağılımı: Dengeli
+                  </span>
+                  <span class="result-confidence">95.0% Güven</span>
+                </div>
+
+                <div class="result-item">
+                  <span class="result-tag healthy">
+                    <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                    Leke / Böcek Hasarı: Yok
+                  </span>
+                  <span class="result-confidence">98.5% Güven</span>
+                </div>
+
+                <div class="result-summary-box">
+                  <h4>Sera Sağlığı: Mükemmel</h4>
+                  <p>YODA AI taraması sonucu bitkide herhangi bir patojen veya fizyodajik stres saptanmadı. Besin
+                    takvimine aynen devam edebilirsiniz.</p>
+                </div>
+              </div>
+
+              <button class="scanner-btn" id="btn-scan-yoda">
+                <i data-lucide="aperture"></i>
+                <span id="scan-btn-text">Bitkiyi Tara (YODA)</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- TAB PANEL D: SETTINGS & PROFILE (PROFİL) -->
+          <div class="tab-panel" id="panel-profile" style="display: none;">
+
+            <div class="profile-container">
+              <div class="profile-card">
+                <div class="profile-pic-container">
+                  <div class="profile-pic">
+                    <img
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+                      alt="Profil Resmi">
+                  </div>
+                  <div class="profile-pic-badge">
+                    <i data-lucide="camera"></i>
+                  </div>
+                </div>
+                <span class="profile-name">Ceren Demir</span>
+                <span class="profile-role">Akıllı Sera Yöneticisi</span>
+              </div>
+
+              <!-- Menu Group -->
+              <div class="menu-list">
+
+                <button class="menu-item" id="btn-open-settings">
+                  <div class="menu-item-left">
+                    <i class="menu-icon" data-lucide="settings"></i>
+                    <span>Sera Ayarları</span>
+                  </div>
+                  <i class="menu-arrow" data-lucide="chevron-right"></i>
+                </button>
+
+
+
+                <button class="menu-item" id="btn-open-alarms">
+                  <div class="menu-item-left">
+                    <i class="menu-icon" data-lucide="bell-ring"></i>
+                    <span>Alarm Eşikleri</span>
+                  </div>
+                  <i class="menu-arrow" data-lucide="chevron-right"></i>
+                </button>
+
+                <button class="menu-item" id="btn-open-support">
+                  <div class="menu-item-left">
+                    <i class="menu-icon" data-lucide="life-buoy"></i>
+                    <span>Destek & Yardım</span>
+                  </div>
+                  <i class="menu-arrow" data-lucide="chevron-right"></i>
+                </button>
+
+              </div>
+
+              <button class="logout-btn" id="btn-logout">
+                <i data-lucide="log-out"></i>
+                <span>Oturumu Kapat</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- STICKY BOTTOM APP NAVIGATION -->
+        <nav class="app-nav">
+          <button class="nav-item active" data-tab="dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Ana Sayfa</span>
+          </button>
+
+          <button class="nav-item" data-tab="charts">
+            <i data-lucide="line-chart"></i>
+            <span>Analiz</span>
+          </button>
+
+          <button class="nav-item" data-tab="yoda">
+            <i data-lucide="aperture"></i>
+            <span>YODA</span>
+          </button>
+
+          <button class="nav-item" data-tab="profile">
+            <i data-lucide="user"></i>
+            <span>Profil</span>
+          </button>
+        </nav>
+
+      </div>
+
+      <!-- 5. BOTTOM SHEET MODAL (SERA AYARLARI / DONANIM TEST İSTASYONU) -->
+      <div id="modal-settings" class="bottom-sheet-modal">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-content">
+          <div class="modal-drag-handle"></div>
+          <div class="modal-header">
+            <h3>Sera Donanım Test İstasyonu</h3>
+            <button class="modal-close-btn" id="btn-close-modal">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">Sera içerisindeki donanımları sinyal göndererek test edebilirsiniz. Her cihaz 3 saniye
+              çalışıp ardından 3 saniye duracaktır.</p>
+            <div class="test-device-list">
+
+              <!-- Pompa 1 -->
+              <div class="test-device-card" id="test-card-pompa1">
+                <div class="test-device-info">
+                  <div class="test-device-icon"><i data-lucide="droplet"></i></div>
+                  <div class="test-device-text">
+                    <span class="test-device-name">Pompa 1 (Besin Pompası)</span>
+                    <span class="test-device-status" id="test-status-pompa1">Hazır</span>
+                  </div>
+                </div>
+                <div class="test-device-action" id="test-action-pompa1">
+                  <button class="btn-test-start" onclick="runHardwareTest('pompa1')">Test Et</button>
+                </div>
+              </div>
+
+              <!-- Pompa 2 -->
+              <div class="test-device-card" id="test-card-pompa2">
+                <div class="test-device-info">
+                  <div class="test-device-icon"><i data-lucide="refresh-cw"></i></div>
+                  <div class="test-device-text">
+                    <span class="test-device-name">Pompa 2 (Su Sirkülasyonu)</span>
+                    <span class="test-device-status" id="test-status-pompa2">Hazır</span>
+                  </div>
+                </div>
+                <div class="test-device-action" id="test-action-pompa2">
+                  <button class="btn-test-start" onclick="runHardwareTest('pompa2')">Test Et</button>
+                </div>
+              </div>
+
+              <!-- Pompa 3 -->
+              <div class="test-device-card" id="test-card-pompa3">
+                <div class="test-device-info">
+                  <div class="test-device-icon"><i data-lucide="test-tube"></i></div>
+                  <div class="test-device-text">
+                    <span class="test-device-name">Pompa 3 (pH Dengeleyici)</span>
+                    <span class="test-device-status" id="test-status-pompa3">Hazır</span>
+                  </div>
+                </div>
+                <div class="test-device-action" id="test-action-pompa3">
+                  <button class="btn-test-start" onclick="runHardwareTest('pompa3')">Test Et</button>
+                </div>
+              </div>
+
+              <!-- Fan Sistemi -->
+              <div class="test-device-card" id="test-card-fan">
+                <div class="test-device-info">
+                  <div class="test-device-icon"><i data-lucide="fan"></i></div>
+                  <div class="test-device-text">
+                    <span class="test-device-name">Fan Sistemi (Havalandırma)</span>
+                    <span class="test-device-status" id="test-status-fan">Hazır</span>
+                  </div>
+                </div>
+                <div class="test-device-action" id="test-action-fan">
+                  <button class="btn-test-start" onclick="runHardwareTest('fan')">Test Et</button>
+                </div>
+              </div>
+
+              <!-- LED Aydınlatma -->
+              <div class="test-device-card" id="test-card-led">
+                <div class="test-device-info">
+                  <div class="test-device-icon"><i data-lucide="sun"></i></div>
+                  <div class="test-device-text">
+                    <span class="test-device-name">LED Aydınlatma (Gelişim Işığı)</span>
+                    <span class="test-device-status" id="test-status-led">Hazır</span>
+                  </div>
+                </div>
+                <div class="test-device-action" id="test-action-led">
+                  <button class="btn-test-start" onclick="runHardwareTest('led')">Test Et</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. BOTTOM SHEET MODAL (ALARM EŞİKLERİ) -->
+      <div id="modal-alarms" class="bottom-sheet-modal">
+        <div class="modal-backdrop" id="modal-backdrop-alarms"></div>
+        <div class="modal-content">
+          <div class="modal-drag-handle"></div>
+          <div class="modal-header">
+            <h3>Alarm & Kritik Eşik Ayarları</h3>
+            <button class="modal-close-btn" id="btn-close-modal-alarms">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-desc">Sensör verilerinin alarm durumuna geçeceği kritik alt ve üst sınırları belirleyin. Eşik aşıldığında sistem sizi uyaracaktır.</p>
+            <div class="alarm-settings-list">
+              
+              <!-- Ambient Temp Alarm -->
+              <div class="alarm-setting-card">
+                <div class="alarm-setting-header">
+                  <div class="alarm-setting-title-box">
+                    <div class="alarm-setting-icon temp-color"><i data-lucide="thermometer"></i></div>
+                    <span class="alarm-setting-name">Ortam Sıcaklığı Limitleri</span>
+                  </div>
+                  <span class="alarm-setting-current" id="lbl-current-ortamTemp">24.8°C</span>
+                </div>
+                <div class="alarm-range-container">
+                  <div class="alarm-range-row">
+                    <span class="range-label">Min: <strong id="lbl-val-ortamTemp-min">18</strong>°C</span>
+                    <input type="range" class="alarm-range-slider" id="rng-ortamTemp-min" min="10" max="25" value="18">
+                  </div>
+                  <div class="alarm-range-row">
+                    <span class="range-label">Max: <strong id="lbl-val-ortamTemp-max">30</strong>°C</span>
+                    <input type="range" class="alarm-range-slider" id="rng-ortamTemp-max" min="25" max="40" value="30">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ambient Humidity Alarm -->
+              <div class="alarm-setting-card">
+                <div class="alarm-setting-header">
+                  <div class="alarm-setting-title-box">
+                    <div class="alarm-setting-icon humid-color"><i data-lucide="droplets"></i></div>
+                    <span class="alarm-setting-name">Ortam Nemi Limitleri</span>
+                  </div>
+                  <span class="alarm-setting-current" id="lbl-current-ortamHumid">%62</span>
+                </div>
+                <div class="alarm-range-container">
+                  <div class="alarm-range-row">
+                    <span class="range-label">Min: <strong id="lbl-val-ortamHumid-min">40</strong>%</span>
+                    <input type="range" class="alarm-range-slider" id="rng-ortamHumid-min" min="20" max="55" value="40">
+                  </div>
+                  <div class="alarm-range-row">
+                    <span class="range-label">Max: <strong id="lbl-val-ortamHumid-max">80</strong>%</span>
+                    <input type="range" class="alarm-range-slider" id="rng-ortamHumid-max" min="60" max="95" value="80">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Water TDS Alarm -->
+              <div class="alarm-setting-card">
+                <div class="alarm-setting-header">
+                  <div class="alarm-setting-title-box">
+                    <div class="alarm-setting-icon tds-color"><i data-lucide="beaker"></i></div>
+                    <span class="alarm-setting-name">Su Besin Değeri (TDS)</span>
+                  </div>
+                  <span class="alarm-setting-current" id="lbl-current-suTds">780 ppm</span>
+                </div>
+                <div class="alarm-range-container">
+                  <div class="alarm-range-row">
+                    <span class="range-label">Min: <strong id="lbl-val-suTds-min">600</strong> ppm</span>
+                    <input type="range" class="alarm-range-slider" id="rng-suTds-min" min="400" max="750" value="600">
+                  </div>
+                  <div class="alarm-range-row">
+                    <span class="range-label">Max: <strong id="lbl-val-suTds-max">900</strong> ppm</span>
+                    <input type="range" class="alarm-range-slider" id="rng-suTds-max" min="800" max="1200" value="900">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Water Temp Alarm -->
+              <div class="alarm-setting-card">
+                <div class="alarm-setting-header">
+                  <div class="alarm-setting-title-box">
+                    <div class="alarm-setting-icon water-color"><i data-lucide="thermometer-sun"></i></div>
+                    <span class="alarm-setting-name">Su Sıcaklığı Limitleri</span>
+                  </div>
+                  <span class="alarm-setting-current" id="lbl-current-suTemp">21.5°C</span>
+                </div>
+                <div class="alarm-range-container">
+                  <div class="alarm-range-row">
+                    <span class="range-label">Min: <strong id="lbl-val-suTemp-min">16</strong>°C</span>
+                    <input type="range" class="alarm-range-slider" id="rng-suTemp-min" min="10" max="20" value="16">
+                  </div>
+                  <div class="alarm-range-row">
+                    <span class="range-label">Max: <strong id="lbl-val-suTemp-max">26</strong>°C</span>
+                    <input type="range" class="alarm-range-slider" id="rng-suTemp-max" min="20" max="30" value="26">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. BOTTOM SHEET MODAL (DESTEK & YARDIM) -->
+      <div id="modal-support" class="bottom-sheet-modal">
+        <div class="modal-backdrop" id="modal-backdrop-support"></div>
+        <div class="modal-content">
+          <div class="modal-drag-handle"></div>
+          <div class="modal-header">
+            <h3>Destek & Yardım Merkezi</h3>
+            <button class="modal-close-btn" id="btn-close-modal-support">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            
+            <!-- Support Ticket Form / Success View Container -->
+            <div id="support-container" class="support-ticket-card">
+              <h4 class="support-section-title">Teknik Destek Talebi</h4>
+              <p class="support-desc" style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.8rem;">Sistem arızaları veya sorularınız için destek ekibimizle hızlıca iletişime geçebilirsiniz.</p>
+              
+              <div class="form-group" style="margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem;">
+                <label for="support-category" style="font-size: 0.72rem; font-weight: 700; color: #5d616d; text-transform: uppercase;">Talep Kategorisi</label>
+                <div class="select-wrapper">
+                  <select id="support-category">
+                    <option value="hardware">Donanım Arızası / Sinyal Hatası</option>
+                    <option value="yoda">YODA AI Teşhis Sistemi</option>
+                    <option value="network">Bağlantı & Entegrasyon</option>
+                    <option value="other">Diğer Sorular</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.8rem; margin-bottom: 1rem;">
+                <label for="support-message" style="font-size: 0.72rem; font-weight: 700; color: #5d616d; text-transform: uppercase;">Açıklama</label>
+                <textarea id="support-message" placeholder="Sorununuzu veya talebinizi detaylıca açıklayın..." rows="3"></textarea>
+              </div>
+
+              <button class="support-submit-btn" id="btn-submit-support" onclick="submitSupportRequest()">
+                <i data-lucide="send"></i> Talep Oluştur
+              </button>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section" style="margin-top: 1.5rem;">
+              <h4 class="support-section-title">Sıkça Sorulan Sorular</h4>
+              
+              <div class="faq-list">
+                
+                <div class="faq-item">
+                  <button class="faq-trigger" onclick="toggleFaq(this)">
+                    <span>Otomatik Mod nasıl çalışır?</span>
+                    <i data-lucide="chevron-down"></i>
+                  </button>
+                  <div class="faq-content">
+                    <p>Tam Otomatik Mod aktif edildiğinde, sistem ortam sıcaklığı ve nem değerlerine göre fanları ve LED aydınlatmaları otomatik kontrol eder; pH ve TDS seviyelerini optimal baselarda tutar.</p>
+                  </div>
+                </div>
+
+                <div class="faq-item">
+                  <button class="faq-trigger" onclick="toggleFaq(this)">
+                    <span>YODA Yaprak Analizi nedir?</span>
+                    <i data-lucide="chevron-down"></i>
+                  </button>
+                  <div class="faq-content">
+                    <p>YODA bitki teşhisi, mobil kamera ile yaprak morfolojisini tarayarak bitkideki olası hastalıkları, klorofil dağılımını ve böcek lekelerini saniyeler içerisinde saptayan yapay zeka modelimizdir.</p>
+                  </div>
+                </div>
+
+                <div class="faq-item">
+                  <button class="faq-trigger" onclick="toggleFaq(this)">
+                    <span>Eşik Alarmları nasıl susturulur?</span>
+                    <i data-lucide="chevron-down"></i>
+                  </button>
+                  <div class="faq-content">
+                    <p>Eşik alarmları, sensör verileri normal limitler içerisine girdiğinde otomatik olarak temizlenir. Limitlerinizi "Alarm Eşikleri" menüsünden esneterek alarm durumunu pasifleştirebilirsiniz.</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDK CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <!-- Javascript Logic -->
+  <script src="app.js"></script>
+</body>
+
+</html>

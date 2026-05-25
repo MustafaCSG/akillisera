@@ -1,0 +1,14 @@
+# ==========================================
+# GÜVENLİK UYARISI: Firebase Admin Yetki Anahtarı
+# ==========================================
+# Raspberry Pi için indirdiğiniz özel yetki anahtarını 
+# GITHUB'A KESİNLİKLE YÜKLEMEYİN! Aksi takdirde başkaları
+# veritabanınıza tam yetkiyle erişebilir.
+
+serviceAccountKey.json
+
+# Yerel IDE ve Sistem Dosyaları
+.vscode/
+.idea/
+.DS_Store
+*.log
