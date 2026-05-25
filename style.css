@@ -190,7 +190,7 @@ body {
 
   /* PREMIUM FLOATING BOTTOM NAVIGATION BAR FOR MOBILE VIEWPORTS */
   .app-nav {
-    bottom: 45px; /* Menüyü tarayıcı çubuklarının üzerine çıkacak şekilde yukarı taşıyoruz */
+    bottom: 75px; /* Menüyü tarayıcı çubuklarının üzerine çıkacak şekilde daha da yukarı taşıyoruz */
     left: 16px;
     right: 16px;
     height: 72px;
@@ -201,7 +201,7 @@ body {
   }
 
   .screen-main-content {
-    padding-bottom: 140px; /* İçeriklerin yüzen menünün arkasında kalmaması için alt boşluğu artırıyoruz */
+    padding-bottom: 175px; /* İçeriklerin yüzen menünün arkasında kalmaması için alt boşluğu artırıyoruz */
   }
 }
 
