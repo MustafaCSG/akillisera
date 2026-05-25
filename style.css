@@ -147,7 +147,7 @@ body {
 }
 
 /* RESPONSIVE DESIGN (Actual Mobile Viewports) */
-@media (max-width: 500px) {
+@media (max-width: 768px) {
   html, body {
     position: fixed;
     top: 0;
@@ -190,7 +190,8 @@ body {
 
   /* PREMIUM FLOATING BOTTOM NAVIGATION BAR FOR MOBILE VIEWPORTS */
   .app-nav {
-    bottom: 120px; /* Menüyü çok daha yukarı taşıyarak görünürlüğü kesinleştiriyoruz */
+    bottom: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom)); /* Tarayıcı çubuğunun ve çentiğin üzerine çıkacak şekilde dikey hizalama */
     left: 16px;
     right: 16px;
     height: 72px;
@@ -201,7 +202,8 @@ body {
   }
 
   .screen-main-content {
-    padding-bottom: 220px; /* İçeriklerin yüzen menünün arkasında kalmaması için alt boşluğu artırıyoruz */
+    padding-bottom: 120px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom)); /* İçeriklerin yüzen menünün arkasında kalmaması için alt boşluğu ayarlıyoruz */
   }
 }
 
