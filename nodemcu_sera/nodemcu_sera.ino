@@ -144,7 +144,7 @@ void updatePhysicalRelays() {
 
 // TDS Sensorunden veri okuma ve sicaklik kompanzasyonu
 int readTdsValue(float temperature) {
-  if (!adsAvailable) return 750; // ADS1115 yoksa varsayilan optimal TDS
+  if (!adsAvailable) return -1; // ADS1115 yoksa -1 don (N/A tetikler)
   
   // ADS1115 A0 kanalindan analog degeri oku (Single-ended okuma)
   int16_t adc0 = ads.readADC_SingleEnded(0); 
