@@ -510,11 +510,46 @@ function initApp() {
 
   // --- WEEKLY DATASETS FOR ANALİZ TAB ---
   const weeklyData = {
-    ortamTemp: [22.4, 23.8, 25.1, 24.5, 26.2, 25.5, 24.8], // past 7 days temperatures
-    ortamHumid: [58, 62, 65, 60, 63, 61, 62],           // past 7 days humidities
-    suTds: [740, 780, 795, 770, 790, 785, 780],          // past 7 days TDS
-    suTemp: [20.8, 21.2, 21.8, 21.5, 21.9, 21.6, 21.5]     // past 7 days water temp
+    ortamTemp: [0, 0, 0, 0, 0, 0, 0],
+    ortamHumid: [0, 0, 0, 0, 0, 0, 0],
+    suTds: [0, 0, 0, 0, 0, 0, 0],
+    suTemp: [0, 0, 0, 0, 0, 0, 0]
   };
+
+  // Function to dynamically update labels under charts relative to today and highlight today
+  function updateChartLabelsAndHighlighting() {
+    const today = new Date();
+    const todayWday = today.getDay(); // 0 (Sun) to 6 (Sat)
+    const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+
+    // Find all charts
+    const charts = document.querySelectorAll(".weekly-chart");
+    
+    charts.forEach(chart => {
+      const bars = chart.querySelectorAll(".chart-bar");
+      bars.forEach((bar, index) => {
+        // Calculate the day of week for this column (index 0 is 6 days ago, index 6 is today)
+        const targetWday = (todayWday - 6 + index + 7) % 7;
+        
+        // Update label
+        const labelEl = bar.querySelector(".bar-label");
+        if (labelEl) {
+          labelEl.innerText = dayNames[targetWday];
+        }
+
+        // Highlight the today's bar (far right, index 6)
+        const fillEl = bar.querySelector(".bar-fill");
+        if (fillEl) {
+          if (index === 6) {
+            // Apply distinct style (bright highlighted glow)
+            fillEl.style.filter = "brightness(1.25) drop-shadow(0 0 5px var(--primary))";
+          } else {
+            fillEl.style.filter = "";
+          }
+        }
+      });
+    });
+  }
 
   // Function to animate bar chart fills when loading the charts tab
   function animateWeeklyCharts() {
@@ -1484,60 +1519,64 @@ function initApp() {
     });
 
     // 4. Historical Data Listener for Charts (DB -> Web)
-    historyRef = db.ref("greenhouse/history").limitToLast(7);
+    historyRef = db.ref("greenhouse/history");
     historyRef.on("value", (snapshot) => {
-      const historyData = snapshot.val();
-      if (historyData) {
-        const keys = Object.keys(historyData).sort(); // Sort chronologically
-        const temps = [];
-        const humids = [];
-        const tdss = [];
-        const waterTemps = [];
+      const historyData = snapshot.val() || {};
+      
+      const today = new Date();
+      const todayWday = today.getDay(); // 0 (Sun) to 6 (Sat)
+      
+      // Calculate YYYY-MM-DD string
+      const formatDate = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const r = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${r}`;
+      };
+      
+      // Fill weeklyData for the last 7 days ending with today.
+      // Index 0 represents 6 days ago, index 6 represents today.
+      for (let i = 0; i < 7; i++) {
+        const dayOffset = i - 6;
+        const targetDate = new Date();
+        targetDate.setDate(today.getDate() + dayOffset);
+        const targetDateStr = formatDate(targetDate);
+        const targetWday = targetDate.getDay(); // 0-6 index
         
-        keys.forEach(k => {
-          const entry = historyData[k];
-          if (entry.ortamTemp !== undefined && entry.ortamTemp !== "N/A") temps.push(parseFloat(entry.ortamTemp));
-          if (entry.ortamHumid !== undefined && entry.ortamHumid !== "N/A") humids.push(parseFloat(entry.ortamHumid));
-          if (entry.suTds !== undefined && entry.suTds !== "N/A") tdss.push(parseFloat(entry.suTds));
-          if (entry.suTemp !== undefined && entry.suTemp !== "N/A") waterTemps.push(parseFloat(entry.suTemp));
-        });
-
-        const defaultWeeklyData = {
-          ortamTemp: [22.4, 23.1, 24.5, 23.8, 25.1, 24.2, 24.8],
-          ortamHumid: [58, 60, 65, 62, 59, 61, 62],
-          suTds: [740, 760, 785, 770, 790, 780, 780],
-          suTemp: [20.2, 20.8, 21.2, 20.9, 21.5, 21.1, 21.5]
-        };
-
-        for (let i = 0; i < 7; i++) {
-          const histIdx = temps.length - 7 + i;
-          if (histIdx >= 0 && histIdx < temps.length) {
-            weeklyData.ortamTemp[i] = temps[histIdx];
-            weeklyData.ortamHumid[i] = humids[histIdx];
-            weeklyData.suTds[i] = tdss[histIdx];
-            weeklyData.suTemp[i] = waterTemps[histIdx];
-          } else {
-            weeklyData.ortamTemp[i] = defaultWeeklyData.ortamTemp[i];
-            weeklyData.ortamHumid[i] = defaultWeeklyData.ortamHumid[i];
-            weeklyData.suTds[i] = defaultWeeklyData.suTds[i];
-            weeklyData.suTemp[i] = defaultWeeklyData.suTemp[i];
-          }
+        // Fetch from Firebase history under the node `targetWday`
+        const entry = historyData[targetWday];
+        
+        // Validate if the entry exists and its stored date matches the target date
+        if (entry && entry.date === targetDateStr && entry.count > 0) {
+          weeklyData.ortamTemp[i] = parseFloat(entry.ortamTemp) || 0;
+          weeklyData.ortamHumid[i] = parseFloat(entry.ortamHumid) || 0;
+          weeklyData.suTds[i] = parseFloat(entry.suTds) || 0;
+          weeklyData.suTemp[i] = parseFloat(entry.suTemp) || 0;
+        } else {
+          // If no data or date mismatch (stale data from last week), set to 0
+          weeklyData.ortamTemp[i] = 0;
+          weeklyData.ortamHumid[i] = 0;
+          weeklyData.suTds[i] = 0;
+          weeklyData.suTemp[i] = 0;
         }
-
-        // Live update the latest day with current telemetry if active
-        if (telemetry.ortamTemp !== undefined && !isNaN(telemetry.ortamTemp) && telemetry.ortamTemp > -90) {
-          weeklyData.ortamTemp[6] = telemetry.ortamTemp;
-          weeklyData.ortamHumid[6] = telemetry.ortamHumid;
-        }
-        if (telemetry.suTds !== undefined && !isNaN(telemetry.suTds) && telemetry.suTds >= 0) {
-          weeklyData.suTds[6] = telemetry.suTds;
-        }
-        if (telemetry.suTemp !== undefined && !isNaN(telemetry.suTemp) && telemetry.suTemp > -90) {
-          weeklyData.suTemp[6] = telemetry.suTemp;
-        }
-
-        animateWeeklyCharts();
       }
+
+      // Live update today's column (index 6) with current telemetry if active
+      const isLiveTempOk = telemetry.ortamTemp !== "N/A" && !isNaN(telemetry.ortamTemp) && telemetry.ortamTemp > -90;
+      const isLiveHumidOk = telemetry.ortamHumid !== "N/A" && !isNaN(telemetry.ortamHumid) && telemetry.ortamHumid > -90;
+      const isLiveTdsOk = telemetry.suTds !== "N/A" && !isNaN(telemetry.suTds) && telemetry.suTds >= 0;
+      const isLiveWaterTempOk = telemetry.suTemp !== "N/A" && !isNaN(telemetry.suTemp) && telemetry.suTemp > -90;
+
+      // Only overwrite if we don't have database average yet
+      if (weeklyData.ortamTemp[6] === 0 && isLiveTempOk) weeklyData.ortamTemp[6] = telemetry.ortamTemp;
+      if (weeklyData.ortamHumid[6] === 0 && isLiveHumidOk) weeklyData.ortamHumid[6] = telemetry.ortamHumid;
+      if (weeklyData.suTds[6] === 0 && isLiveTdsOk) weeklyData.suTds[6] = telemetry.suTds;
+      if (weeklyData.suTemp[6] === 0 && isLiveWaterTempOk) weeklyData.suTemp[6] = telemetry.suTemp;
+
+      // Update labels and highlighting
+      updateChartLabelsAndHighlighting();
+      // Redraw charts
+      animateWeeklyCharts();
     }, (error) => {
       console.warn("History listener cancelled:", error.message);
     });
