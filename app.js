@@ -561,6 +561,57 @@ function initApp() {
     });
   }
 
+  // Function to dynamically update trend badges next to charts based on real average values
+  function updateChartTrends() {
+    const thresholds = {
+      ortamTemp: { min: 20.0, max: 28.0 },
+      ortamHumid: { min: 50, max: 70 },
+      suTds: { min: 600, max: 900 },
+      suTemp: { min: 16.0, max: 26.0 }
+    };
+
+    const keys = ["ortamTemp", "ortamHumid", "suTds", "suTemp"];
+    const trendContainers = document.querySelectorAll(".chart-trend");
+
+    keys.forEach((key, idx) => {
+      const vals = weeklyData[key].filter(v => v > 0); // Only evaluate days with records
+      const trendEl = trendContainers[idx];
+      if (!trendEl) return;
+
+      const labelEl = trendEl.querySelector("span");
+      const iconEl = trendEl.querySelector("i");
+
+      if (vals.length === 0) {
+        if (labelEl) labelEl.innerText = "Yok";
+        trendEl.className = "chart-trend";
+        trendEl.style.color = "var(--text-muted)";
+        trendEl.style.background = "rgba(255, 255, 255, 0.05)";
+        if (iconEl) iconEl.innerHTML = `<i data-lucide="help-circle"></i>`;
+        return;
+      }
+
+      // Compute weekly average
+      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const limits = thresholds[key];
+      const isGood = avg >= limits.min && avg <= limits.max;
+
+      if (isGood) {
+        if (labelEl) labelEl.innerText = "İyi";
+        trendEl.className = "chart-trend trend-up";
+        trendEl.style.color = "#2ec4b6";
+        trendEl.style.background = "rgba(46, 196, 182, 0.1)";
+        if (iconEl) iconEl.innerHTML = `<i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>`;
+      } else {
+        if (labelEl) labelEl.innerText = "Kötü";
+        trendEl.className = "chart-trend trend-down";
+        trendEl.style.color = "#ff4d4d";
+        trendEl.style.background = "rgba(255, 77, 77, 0.1)";
+        if (iconEl) iconEl.innerHTML = `<i data-lucide="trending-down" style="width: 16px; height: 16px;"></i>`;
+      }
+    });
+    safeCreateIcons();
+  }
+
   // Function to animate bar chart fills when loading the charts tab
   function animateWeeklyCharts() {
     const scales = {
@@ -1712,6 +1763,8 @@ function initApp() {
 
       // Update labels and highlighting
       updateChartLabelsAndHighlighting();
+      // Update trend badges based on real values
+      updateChartTrends();
       // Redraw charts
       animateWeeklyCharts();
     }, (error) => {
