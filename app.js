@@ -54,7 +54,13 @@ function initApp() {
     }
 
   // --- STATE VARIABLES ---
-  let currentUser = { email: "akilli@sera.com", name: "Ceren Demir", role: "Akıllı Sera Yöneticisi" };
+  let currentUser = { email: "akilli@sera.com", name: "Ceren Demir", role: "Akıllı Sera Yöneticisi", avatar: "" };
+
+  // Load local profile backups for immediate UI render
+  const cachedName = localStorage.getItem("local_profile_name");
+  const cachedAvatar = localStorage.getItem("local_profile_avatar");
+  if (cachedName) currentUser.name = cachedName;
+  if (cachedAvatar) currentUser.avatar = cachedAvatar;
 
   // Real-time IoT sensor telemetry baselines
   let telemetry = {
@@ -321,13 +327,22 @@ function initApp() {
   updateAllGauges();
   updateWaterLevelUI();
 
-  // Helper to dynamically update the profile name based on signed-in user
+  // Helper to dynamically update the profile name and image based on signed-in user
   function updateProfileUI(email) {
     const profileNameEl = document.querySelector(".profile-name");
+    
     if (profileNameEl) {
-      const namePart = email.split('@')[0];
-      const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-      profileNameEl.innerText = capitalized;
+      if (currentUser.name && currentUser.name !== "") {
+        profileNameEl.innerText = currentUser.name;
+      } else {
+        const namePart = email.split('@')[0];
+        const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        profileNameEl.innerText = capitalized;
+      }
+    }
+
+    if (currentUser.avatar && currentUser.avatar !== "") {
+      document.querySelectorAll(".user-avatar-img").forEach(img => img.src = currentUser.avatar);
     }
   }
 
@@ -1316,7 +1331,133 @@ function initApp() {
   // Initial call
   checkAlarmTelemetry();
 
-  // --- 10. DESTEK & YARDIM LOGIC ---
+  // --- 10. ACCOUNT SETTINGS LOGIC ---
+  const modalAccount = document.getElementById("modal-account");
+  const btnOpenAccount = document.getElementById("btn-open-account");
+  const btnCloseAccount = document.getElementById("btn-close-modal-account");
+  const modalBackdropAccount = document.getElementById("modal-backdrop-account");
+  const btnSaveAccount = document.getElementById("btn-save-account");
+  
+  const inputAccountName = document.getElementById("account-name");
+  const inputAccountEmail = document.getElementById("account-email");
+  const inputAccountPassword = document.getElementById("account-password");
+  const accountAvatarPreview = document.getElementById("account-avatar-preview");
+  const avatarFileInput = document.getElementById("avatar-file-input");
+
+  let tempAvatarBase64 = "";
+
+  if (btnOpenAccount && modalAccount) {
+    btnOpenAccount.addEventListener("click", () => {
+      modalAccount.classList.add("active");
+      
+      // Load current values
+      if (inputAccountName) inputAccountName.value = currentUser.name || "";
+      if (inputAccountEmail) inputAccountEmail.value = currentUser.email || "";
+      if (inputAccountPassword) inputAccountPassword.value = "";
+      
+      const currentAvatar = currentUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200";
+      if (accountAvatarPreview) accountAvatarPreview.src = currentAvatar;
+      tempAvatarBase64 = currentUser.avatar || "";
+    });
+  }
+
+  const closeAccountModal = () => {
+    if (modalAccount) modalAccount.classList.remove("active");
+  };
+
+  if (btnCloseAccount) btnCloseAccount.addEventListener("click", closeAccountModal);
+  if (modalBackdropAccount) modalBackdropAccount.addEventListener("click", closeAccountModal);
+
+  // Avatar image upload handling
+  if (avatarFileInput && accountAvatarPreview) {
+    avatarFileInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Limit to 1.5MB to stay safe within Firebase/localStorage quotas
+      if (file.size > 1500000) {
+        showToast("Boyut Hatası", "Görsel boyutu 1.5MB'dan küçük olmalıdır.", "alert-triangle");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        accountAvatarPreview.src = e.target.result;
+        tempAvatarBase64 = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Save Account Changes
+  if (btnSaveAccount) {
+    btnSaveAccount.addEventListener("click", () => {
+      const newName = inputAccountName.value.trim();
+      const newEmail = inputAccountEmail.value.trim();
+      const newPassword = inputAccountPassword.value.trim();
+
+      if (newName === "" || newEmail === "") {
+        showToast("Hata", "Ad Soyad ve E-posta alanları boş bırakılamaz.", "alert-triangle");
+        return;
+      }
+
+      // Enter loading state
+      btnSaveAccount.disabled = true;
+      const originalText = btnSaveAccount.innerHTML;
+      btnSaveAccount.innerHTML = `<span class="spinner" style="width: 14px; height: 14px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; display: inline-block; animation: spin 0.8s infinite linear; margin-right: 4px; vertical-align: middle;"></span> Kaydediliyor...`;
+
+      const performUpdates = async () => {
+        try {
+          // Update Firebase Auth if configured and logged in
+          if (useFirebase && auth && auth.currentUser) {
+            const user = auth.currentUser;
+            
+            // 1. Update Email in Auth
+            if (newEmail !== user.email) {
+              await user.updateEmail(newEmail);
+            }
+
+            // 2. Update Password in Auth if provided
+            if (newPassword !== "") {
+              await user.updatePassword(newPassword);
+            }
+          }
+
+          // 3. Update global states and local storage fallback
+          currentUser.name = newName;
+          currentUser.email = newEmail;
+          currentUser.avatar = tempAvatarBase64;
+          localStorage.setItem("local_profile_name", newName);
+          localStorage.setItem("local_profile_avatar", tempAvatarBase64);
+
+          // 4. Update Firebase RTDB profile node
+          if (useFirebase && db) {
+            await db.ref("greenhouse/profile").set({
+              name: newName,
+              email: newEmail,
+              avatar: tempAvatarBase64
+            });
+          }
+
+          // 5. Update Profile UI elements instantly
+          updateProfileUI(newEmail);
+
+          showToast("Başarılı", "Hesap ayarlarınız başarıyla güncellendi.", "check-circle");
+          closeAccountModal();
+        } catch (error) {
+          console.error("Account update error:", error);
+          showToast("Güncelleme Hatası", error.message || "Hesap güncellenirken bir hata oluştu.", "alert-triangle");
+        } finally {
+          btnSaveAccount.disabled = false;
+          btnSaveAccount.innerHTML = originalText;
+        }
+      };
+
+      performUpdates();
+    });
+  }
+
+  // --- 11. DESTEK & YARDIM LOGIC ---
   const modalSupport = document.getElementById("modal-support");
   const btnOpenSupport = document.getElementById("btn-open-support");
   const btnCloseSupport = document.getElementById("btn-close-modal-support");
@@ -1432,6 +1573,7 @@ function initApp() {
   let settingsRef = null;
   let actuatorsRef = null;
   let historyRef = null;
+  let profileRef = null;
 
   function setupFirebaseListeners() {
     if (!useFirebase || !db) return;
@@ -1575,6 +1717,20 @@ function initApp() {
     }, (error) => {
       console.warn("History listener cancelled:", error.message);
     });
+
+    // 5. User Profile Listener (DB -> Web)
+    profileRef = db.ref("greenhouse/profile");
+    profileRef.on("value", (snapshot) => {
+      const profile = snapshot.val();
+      if (profile) {
+        if (profile.name) currentUser.name = profile.name;
+        if (profile.email) currentUser.email = profile.email;
+        if (profile.avatar) currentUser.avatar = profile.avatar;
+        updateProfileUI(currentUser.email);
+      }
+    }, (error) => {
+      console.warn("Profile listener cancelled:", error.message);
+    });
   }
 
   function detachFirebaseListeners() {
@@ -1593,6 +1749,10 @@ function initApp() {
     if (historyRef) {
       historyRef.off();
       historyRef = null;
+    }
+    if (profileRef) {
+      profileRef.off();
+      profileRef = null;
     }
   }
 

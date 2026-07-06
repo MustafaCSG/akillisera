@@ -105,7 +105,7 @@
                 <p>Gerçek Zamanlı IoT Takip</p>
               </div>
               <div class="avatar-box">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+                <img class="user-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
                   alt="Profil Resmi">
               </div>
             </div>
@@ -879,7 +879,7 @@
               <div class="profile-card">
                 <div class="profile-pic-container">
                   <div class="profile-pic">
-                    <img
+                    <img class="user-avatar-img"
                       src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
                       alt="Profil Resmi">
                   </div>
@@ -898,6 +898,14 @@
                   <div class="menu-item-left">
                     <i class="menu-icon" data-lucide="settings"></i>
                     <span>Sera Ayarları</span>
+                  </div>
+                  <i class="menu-arrow" data-lucide="chevron-right"></i>
+                </button>
+
+                <button class="menu-item" id="btn-open-account">
+                  <div class="menu-item-left">
+                    <i class="menu-icon" data-lucide="user-cog"></i>
+                    <span>Hesap Ayarları</span>
                   </div>
                   <i class="menu-arrow" data-lucide="chevron-right"></i>
                 </button>
@@ -1152,6 +1160,59 @@
         </div>
       </div>
 
+      <!-- 8. BOTTOM SHEET MODAL (HESAP AYARLARI) -->
+      <div id="modal-account" class="bottom-sheet-modal">
+        <div class="modal-backdrop" id="modal-backdrop-account"></div>
+        <div class="modal-content">
+          <div class="modal-drag-handle"></div>
+          <div class="modal-header">
+            <h3>Hesap Ayarları</h3>
+            <button class="modal-close-btn" id="btn-close-modal-account">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <div class="modal-body" style="padding-bottom: 2rem;">
+            
+            <div class="profile-avatar-edit-section" style="display: flex; flex-direction: column; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem;">
+              <div class="profile-pic-container" style="position: relative;">
+                <div class="profile-pic" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center;">
+                  <img id="account-avatar-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" alt="Avatar Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <label for="avatar-file-input" class="profile-pic-badge" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-card); cursor: pointer; transition: transform 0.2s;">
+                  <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+                </label>
+                <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+              </div>
+              <span style="font-size: 0.68rem; color: var(--text-muted);">Fotoğraf değiştirmek için kameraya dokunun</span>
+            </div>
+
+            <div class="account-settings-form" style="display: flex; flex-direction: column; gap: 1rem;">
+              
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <label for="account-name" style="font-size: 0.72rem; font-weight: 700; color: #5d616d; text-transform: uppercase;">Adı Soyadı</label>
+                <input type="text" id="account-name" placeholder="Ad Soyad girin..." style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: var(--text); font-size: 0.82rem; outline: none; transition: border-color 0.2s;">
+              </div>
+
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <label for="account-email" style="font-size: 0.72rem; font-weight: 700; color: #5d616d; text-transform: uppercase;">E-posta Adresi</label>
+                <input type="email" id="account-email" placeholder="E-posta girin..." style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: var(--text); font-size: 0.82rem; outline: none; transition: border-color 0.2s;">
+              </div>
+
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                <label for="account-password" style="font-size: 0.72rem; font-weight: 700; color: #5d616d; text-transform: uppercase;">Yeni Şifre (İsteğe Bağlı)</label>
+                <input type="password" id="account-password" placeholder="Değiştirmek istemiyorsanız boş bırakın" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: var(--text); font-size: 0.82rem; outline: none; transition: border-color 0.2s;">
+              </div>
+
+              <button class="support-submit-btn" id="btn-save-account" style="margin-top: 1rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--primary); color: white; border: none; padding: 0.7rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+                <i data-lucide="save" style="width: 16px; height: 16px;"></i> Değişiklikleri Kaydet
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
       <!-- 7. BOTTOM SHEET MODAL (DESTEK & YARDIM) -->
       <div id="modal-support" class="bottom-sheet-modal">
         <div class="modal-backdrop" id="modal-backdrop-support"></div>
@@ -1244,7 +1305,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <!-- Javascript Logic -->
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 
 </html>
