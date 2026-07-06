@@ -46,23 +46,13 @@
 #define PIN_POMPA_ANA   D5 // GPIO14 - Ana Su Pompasi (Damlama)
 #define PIN_POMPA_BES_A D6 // GPIO12 - Besin A Pompasi
 #define PIN_POMPA_BES_B D7 // GPIO13 - Besin B Pompasi
-#define PIN_ROLE_FAN    D0 // GPIO16 - Fan Havalandirma
-#define PIN_ROLE_LED    D3 // GPIO0  - LED Işık
+#define PIN_ROLE_LED    D0 // GPIO16 - LED Işık
+#define PIN_ROLE_FAN    D8 // GPIO15 - Fan (Boot sirasinda LOW kalmasi icin role karti aktif-HIGH veya pull-down olmali)
 
 // Sensor Pinleri
 #define PIN_DHT         D4 // GPIO2  - DHT22 (Ortam Sicaklik / Nem)
-#define PIN_DS18B20     D8 // GPIO15 - DS18B20 (Su Sicakligi) (Harici 4.7k Pull-up ile)
-#define PIN_SAMANDIRA   D8 // Su Seviye Şamandırası (Eger GPIO15'te ise boot sirasinda LOW olmali)
-// Not: Eger tek pin kullanilacaksa DS18B20 ve Samandira cakismamali. 
-// Alternatif olarak DS18B20'yi RX/TX pinlerinden birine veya D0'a alabiliriz.
-// Burada DS18B20 D0 (GPIO16) pinine, Samandira D8 (GPIO15) pinine atanmistir:
-#undef PIN_ROLE_FAN
-#define PIN_ROLE_FAN    D0 // Fan D0'da (GPIO16)
-#undef PIN_DS18B20
-#define PIN_DS18B20     D9 // Alternatif RX (GPIO3) veya D0 yerine dâhili sensor pini
-// NodeMCU'da en guvenli yerlesim:
-#define DS18B20_PIN     D0 // GPIO16 (Su Sicakligi - OneWire)
-#define SAMANDIRA_PIN   D8 // GPIO15 (Su seviye float switch - Boot sirasinda LOW tutulur)
+#define DS18B20_PIN     D3 // GPIO0  - DS18B20 Su Sicakligi (D3 pini, harici veya dahi 4.7k/10k pull-up ile)
+#define SAMANDIRA_ADS_CHANNEL 1 // ADS1115 Channel A1 - Su Seviye Şamandırası (harici 10k pull-up ile)
 
 // ==========================================
 // 3. SENSOR VE AKTUATOR NESNELERI
@@ -102,6 +92,7 @@ struct Thresholds {
 } thresholds;
 
 bool autoMode = false;
+bool adsAvailable = false;
 
 struct ActuatorStates {
   bool pompaAna = false;
@@ -153,6 +144,8 @@ void updatePhysicalRelays() {
 
 // TDS Sensorunden veri okuma ve sicaklik kompanzasyonu
 int readTdsValue(float temperature) {
+  if (!adsAvailable) return 750; // ADS1115 yoksa varsayilan optimal TDS
+  
   // ADS1115 A0 kanalindan analog degeri oku (Single-ended okuma)
   int16_t adc0 = ads.readADC_SingleEnded(0); 
   float voltage = adc0 * 0.1875 / 1000.0; // ADS1115 varsayilan gain ile 1 LSB = 0.1875mV
@@ -178,6 +171,8 @@ void readSensors() {
     telemetry.ortamTemp = t;
     telemetry.ortamHumid = h;
   } else {
+    telemetry.ortamTemp = -99.0;
+    telemetry.ortamHumid = -99.0;
     Serial.println(F("[HATA] DHT22 sensorunden veri okunamadi!"));
   }
 
@@ -187,14 +182,18 @@ void readSensors() {
   if (waterTemp != DEVICE_DISCONNECTED_C) {
     telemetry.suTemp = waterTemp;
   } else {
+    telemetry.suTemp = -127.0;
     Serial.println(F("[HATA] DS18B20 sensorunden veri okunamadi!"));
   }
 
-  // 3. Su Seviyesi (Samandira - Float Switch)
-  // Samandira GND'ye cekilidir, su dolu iken LOW verir (INPUT_PULLUP ile)
-  // Su bittiginde sensor acilir ve HIGH okunur.
-  // Baglantiniza gore mantigi tersine cevirebilirsiniz.
-  telemetry.suSeviyesi = (digitalRead(SAMANDIRA_PIN) == LOW);
+  // 3. Su Seviyesi (ADS1115 A1 uzerinden)
+  if (adsAvailable) {
+    int16_t adc1 = ads.readADC_SingleEnded(SAMANDIRA_ADS_CHANNEL);
+    float voltage1 = adc1 * 0.1875 / 1000.0;
+    telemetry.suSeviyesi = (voltage1 < 1.5); // 1.5V altındaysa su var (yeterli)
+  } else {
+    telemetry.suSeviyesi = true; // ADS1115 yoksa varsayilan
+  }
 
   // 4. TDS (ADS1115 A0 uzerinden su sicakligi kompanzasyonlu okuma)
   telemetry.suTds = readTdsValue(telemetry.suTemp);
@@ -249,11 +248,21 @@ void runLocalAutomation() {
 // Telemetry verilerini Firebase RTDB'ye gonderir
 void sendTelemetryToFirebase() {
   FirebaseJson json;
-  json.add("ortamTemp", telemetry.ortamTemp);
-  json.add("ortamHumid", telemetry.ortamHumid);
-  json.add("suTds", telemetry.suTds);
-  json.add("suTemp", telemetry.suTemp);
-  json.add("suSeviyesi", telemetry.suSeviyesi);
+  
+  if (telemetry.ortamTemp <= -99.0) json.add("ortamTemp", "N/A");
+  else json.add("ortamTemp", telemetry.ortamTemp);
+
+  if (telemetry.ortamHumid <= -99.0) json.add("ortamHumid", "N/A");
+  else json.add("ortamHumid", telemetry.ortamHumid);
+
+  if (telemetry.suTds == -1) json.add("suTds", "N/A");
+  else json.add("suTds", telemetry.suTds);
+
+  if (telemetry.suTemp <= -127.0) json.add("suTemp", "N/A");
+  else json.add("suTemp", telemetry.suTemp);
+
+  if (!adsAvailable) json.add("suSeviyesi", "N/A");
+  else json.add("suSeviyesi", telemetry.suSeviyesi);
   
   // Sunucu zaman damgasi
   FirebaseJson timestampJson;
@@ -355,8 +364,6 @@ void setup() {
   pinMode(PIN_POMPA_BES_B, OUTPUT);
   pinMode(PIN_ROLE_FAN,    OUTPUT);
   pinMode(PIN_ROLE_LED,    OUTPUT);
-  
-  pinMode(SAMANDIRA_PIN, INPUT_PULLUP);
 
   // Roleleri varsayilan olarak KAPALI yap (Pasif-HIGH röleler icin HIGH yaz)
   digitalWrite(PIN_POMPA_ANA,   HIGH);
@@ -365,9 +372,23 @@ void setup() {
   digitalWrite(PIN_ROLE_FAN,    HIGH);
   digitalWrite(PIN_ROLE_LED,    HIGH);
 
-  // I2C Baslat (ADS1115 için)
-  Wire.begin(I2C_SDA, I2C_SCL);
-  ads.begin();
+  // I2C Baslat ve ADS1115 algila (Floating pin donma engelleme)
+  pinMode(I2C_SDA, INPUT);
+  pinMode(I2C_SCL, INPUT);
+  delay(10);
+  // I2C pinlerinde pull-up varsa bosken HIGH okunurlar, yoksa floating/LOW olur.
+  if (digitalRead(I2C_SDA) == HIGH && digitalRead(I2C_SCL) == HIGH) {
+    Serial.println(F("[I2C] Hat pull-up algilandi. ADS1115 baslatiliyor..."));
+    Wire.begin(I2C_SDA, I2C_SCL);
+    if (ads.begin()) {
+      adsAvailable = true;
+      Serial.println(F("[I2C] ADS1115 basariyla baslatildi!"));
+    } else {
+      Serial.println(F("[I2C] HATA: ADS1115 baslatilamadi (Cihaz bagli olmayabilir)!"));
+    }
+  } else {
+    Serial.println(F("[I2C] UYARI: I2C hattinda pull-up algilanamadi (ADS1115 bagli degil, simülasyon modunda)."));
+  }
   
   // Sensorleri Baslat
   dht.begin();
@@ -384,8 +405,25 @@ void setup() {
   Serial.print(F("IP Adresi: "));
   Serial.println(WiFi.localIP());
 
+  // Zaman Senkronizasyonu (NTP) - Firebase Auth icin gerekli!
+  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov"); // GMT+3 (Turkiye)
+  Serial.print(F("Zaman senkronizasyonu yapiliyor..."));
+  time_t now = time(nullptr);
+  int retryCount = 0;
+  while (now < 24 * 3600 && retryCount < 20) { // 20 saniye limit
+    delay(1000);
+    Serial.print(".");
+    now = time(nullptr);
+    retryCount++;
+  }
+  if (now > 24 * 3600) {
+    Serial.println(F("\nZaman senkronize edildi!"));
+  } else {
+    Serial.println(F("\n[UYARI] Zaman senkronizasyonu zaman asimina ugradi! Firebase baglantisi basarisiz olabilir."));
+  }
+
   // Firebase Yapilandirmasi
-  fbConfig.host = FIREBASE_HOST;
+  fbConfig.database_url = FIREBASE_HOST;
   fbConfig.api_key = FIREBASE_AUTH;
   
   fbAuth.user.email = FIREBASE_EMAIL;

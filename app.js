@@ -163,7 +163,7 @@ function initApp() {
         fillEl.style.strokeDashoffset = 110;
         fillEl.style.stroke = "rgba(255, 255, 255, 0.1)";
         if (badgeEl) {
-          badgeEl.innerText = "Bağlantı Yok";
+          badgeEl.innerText = "N/A";
           badgeEl.className = "card-badge badge-warning";
         }
         return;
@@ -259,11 +259,11 @@ function initApp() {
 
     if (isWaterOk === "N/A" || isWaterOk === null || isWaterOk === undefined) {
       if (elSuSeviyesi) {
-        elSuSeviyesi.innerText = "Bağlantı Yok";
+        elSuSeviyesi.innerText = "N/A";
         elSuSeviyesi.style.color = "var(--text-muted)";
       }
       if (badgeSuSeviyesi) {
-        badgeSuSeviyesi.innerText = "Bağlantı Yok";
+        badgeSuSeviyesi.innerText = "N/A";
         badgeSuSeviyesi.className = "card-badge badge-warning";
       }
       if (scoreEl) scoreEl.innerText = "--";
@@ -1159,10 +1159,10 @@ function initApp() {
     const lblTds = document.getElementById("lbl-current-suTds");
     const lblWaterTemp = document.getElementById("lbl-current-suTemp");
 
-    if (lblTemp) lblTemp.innerText = (isNaN(telemetry.ortamTemp) || telemetry.ortamTemp <= -99) ? "Bağlantı Yok" : telemetry.ortamTemp.toFixed(1) + "°C";
-    if (lblHumid) lblHumid.innerText = (isNaN(telemetry.ortamHumid) || telemetry.ortamHumid <= -99) ? "Bağlantı Yok" : "%" + Math.round(telemetry.ortamHumid);
-    if (lblTds) lblTds.innerText = (isNaN(telemetry.suTds) || telemetry.suTds < 0) ? "Bağlantı Yok" : Math.round(telemetry.suTds) + " ppm";
-    if (lblWaterTemp) lblWaterTemp.innerText = (isNaN(telemetry.suTemp) || telemetry.suTemp <= -127) ? "Bağlantı Yok" : telemetry.suTemp.toFixed(1) + "°C";
+    if (lblTemp) lblTemp.innerText = (isNaN(telemetry.ortamTemp) || telemetry.ortamTemp <= -99) ? "N/A" : telemetry.ortamTemp.toFixed(1) + "°C";
+    if (lblHumid) lblHumid.innerText = (isNaN(telemetry.ortamHumid) || telemetry.ortamHumid <= -99) ? "N/A" : "%" + Math.round(telemetry.ortamHumid);
+    if (lblTds) lblTds.innerText = (isNaN(telemetry.suTds) || telemetry.suTds < 0) ? "N/A" : Math.round(telemetry.suTds) + " ppm";
+    if (lblWaterTemp) lblWaterTemp.innerText = (isNaN(telemetry.suTemp) || telemetry.suTemp <= -127) ? "N/A" : telemetry.suTemp.toFixed(1) + "°C";
 
     // 2. Perform threshold boundary evaluations
     const params = [
@@ -1380,11 +1380,11 @@ function initApp() {
         if (data.suTemp !== undefined) telemetry.suTemp = parseFloat(data.suTemp);
         if (data.suSeviyesi !== undefined) telemetry.suSeviyesi = data.suSeviyesi;
         
-        // Render values instantly with "Bağlantı Yok" fallback
-        elOrtamTemp.innerText = (data.ortamTemp === "N/A" || isNaN(telemetry.ortamTemp) || telemetry.ortamTemp <= -99) ? "Bağlantı Yok" : telemetry.ortamTemp.toFixed(1) + "°C";
-        elOrtamHumid.innerText = (data.ortamHumid === "N/A" || isNaN(telemetry.ortamHumid) || telemetry.ortamHumid <= -99) ? "Bağlantı Yok" : "%" + Math.round(telemetry.ortamHumid);
-        elSuTds.innerText = (data.suTds === "N/A" || isNaN(telemetry.suTds) || telemetry.suTds < 0) ? "Bağlantı Yok" : Math.round(telemetry.suTds) + " ppm";
-        elSuTemp.innerText = (data.suTemp === "N/A" || isNaN(telemetry.suTemp) || telemetry.suTemp <= -127) ? "Bağlantı Yok" : telemetry.suTemp.toFixed(1) + "°C";
+        // Render values instantly with "N/A" fallback
+        elOrtamTemp.innerText = (data.ortamTemp === "N/A" || isNaN(telemetry.ortamTemp) || telemetry.ortamTemp <= -99) ? "N/A" : telemetry.ortamTemp.toFixed(1) + "°C";
+        elOrtamHumid.innerText = (data.ortamHumid === "N/A" || isNaN(telemetry.ortamHumid) || telemetry.ortamHumid <= -99) ? "N/A" : "%" + Math.round(telemetry.ortamHumid);
+        elSuTds.innerText = (data.suTds === "N/A" || isNaN(telemetry.suTds) || telemetry.suTds < 0) ? "N/A" : Math.round(telemetry.suTds) + " ppm";
+        elSuTemp.innerText = (data.suTemp === "N/A" || isNaN(telemetry.suTemp) || telemetry.suTemp <= -127) ? "N/A" : telemetry.suTemp.toFixed(1) + "°C";
 
         updateAllGauges();
         updateWaterLevelUI();
