@@ -1401,6 +1401,7 @@ function initApp() {
   let telemetryRef = null;
   let settingsRef = null;
   let actuatorsRef = null;
+  let historyRef = null;
 
   function setupFirebaseListeners() {
     if (!useFirebase || !db) return;
@@ -1481,6 +1482,65 @@ function initApp() {
     }, (error) => {
       console.warn("Actuators listener cancelled:", error.message);
     });
+
+    // 4. Historical Data Listener for Charts (DB -> Web)
+    historyRef = db.ref("greenhouse/history").limitToLast(7);
+    historyRef.on("value", (snapshot) => {
+      const historyData = snapshot.val();
+      if (historyData) {
+        const keys = Object.keys(historyData).sort(); // Sort chronologically
+        const temps = [];
+        const humids = [];
+        const tdss = [];
+        const waterTemps = [];
+        
+        keys.forEach(k => {
+          const entry = historyData[k];
+          if (entry.ortamTemp !== undefined && entry.ortamTemp !== "N/A") temps.push(parseFloat(entry.ortamTemp));
+          if (entry.ortamHumid !== undefined && entry.ortamHumid !== "N/A") humids.push(parseFloat(entry.ortamHumid));
+          if (entry.suTds !== undefined && entry.suTds !== "N/A") tdss.push(parseFloat(entry.suTds));
+          if (entry.suTemp !== undefined && entry.suTemp !== "N/A") waterTemps.push(parseFloat(entry.suTemp));
+        });
+
+        const defaultWeeklyData = {
+          ortamTemp: [22.4, 23.1, 24.5, 23.8, 25.1, 24.2, 24.8],
+          ortamHumid: [58, 60, 65, 62, 59, 61, 62],
+          suTds: [740, 760, 785, 770, 790, 780, 780],
+          suTemp: [20.2, 20.8, 21.2, 20.9, 21.5, 21.1, 21.5]
+        };
+
+        for (let i = 0; i < 7; i++) {
+          const histIdx = temps.length - 7 + i;
+          if (histIdx >= 0 && histIdx < temps.length) {
+            weeklyData.ortamTemp[i] = temps[histIdx];
+            weeklyData.ortamHumid[i] = humids[histIdx];
+            weeklyData.suTds[i] = tdss[histIdx];
+            weeklyData.suTemp[i] = waterTemps[histIdx];
+          } else {
+            weeklyData.ortamTemp[i] = defaultWeeklyData.ortamTemp[i];
+            weeklyData.ortamHumid[i] = defaultWeeklyData.ortamHumid[i];
+            weeklyData.suTds[i] = defaultWeeklyData.suTds[i];
+            weeklyData.suTemp[i] = defaultWeeklyData.suTemp[i];
+          }
+        }
+
+        // Live update the latest day with current telemetry if active
+        if (telemetry.ortamTemp !== undefined && !isNaN(telemetry.ortamTemp) && telemetry.ortamTemp > -90) {
+          weeklyData.ortamTemp[6] = telemetry.ortamTemp;
+          weeklyData.ortamHumid[6] = telemetry.ortamHumid;
+        }
+        if (telemetry.suTds !== undefined && !isNaN(telemetry.suTds) && telemetry.suTds >= 0) {
+          weeklyData.suTds[6] = telemetry.suTds;
+        }
+        if (telemetry.suTemp !== undefined && !isNaN(telemetry.suTemp) && telemetry.suTemp > -90) {
+          weeklyData.suTemp[6] = telemetry.suTemp;
+        }
+
+        animateWeeklyCharts();
+      }
+    }, (error) => {
+      console.warn("History listener cancelled:", error.message);
+    });
   }
 
   function detachFirebaseListeners() {
@@ -1495,6 +1555,10 @@ function initApp() {
     if (actuatorsRef) {
       actuatorsRef.off();
       actuatorsRef = null;
+    }
+    if (historyRef) {
+      historyRef.off();
+      historyRef = null;
     }
   }
 

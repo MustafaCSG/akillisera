@@ -109,6 +109,8 @@ float calibrationFactor = 1.0;
 // Zamanlama Kontrolleri
 unsigned long lastTelemetryTime = 0;
 const unsigned long telemetryInterval = 5000; // 5 saniyede bir telemetry gonder
+unsigned long lastHistoryTime = 0;
+const unsigned long historyInterval = 600000;  // 10 dakikada bir (600.000 ms) veritabanina gecmis logu kaydet
 
 // ==========================================
 // 5. YARDIMCI FONKSIYONLAR & KONTROLLER
@@ -467,6 +469,32 @@ void loop() {
       sendTelemetryToFirebase();
     } else {
       Serial.println(F("[UYARI] Baglanti yok, offline modda yerel otomasyon calisiyor."));
+    }
+  }
+
+  // Gecmis (History) Verisi Kaydetme Zamanlaması (10 dakikada bir)
+  if (now - lastHistoryTime >= historyInterval) {
+    lastHistoryTime = now;
+    if (WiFi.status() == WL_CONNECTED && Firebase.ready()) {
+      // Sadece sensorler bagliyken ve gecerli okuma yapiyorken gecmisi kaydet
+      if (telemetry.ortamTemp > -90.0 && telemetry.suTemp > -120.0) {
+        FirebaseJson historyItem;
+        historyItem.add("ortamTemp", telemetry.ortamTemp);
+        historyItem.add("ortamHumid", telemetry.ortamHumid);
+        historyItem.add("suTds", telemetry.suTds);
+        historyItem.add("suTemp", telemetry.suTemp);
+        
+        FirebaseJson timestampJson;
+        timestampJson.add(".sv", "timestamp");
+        historyItem.add("lastUpdated", timestampJson);
+        
+        Serial.println(F("[FIREBASE] Gecmis log kaydi olusturuluyor..."));
+        if (Firebase.push(fbdoTelemetry, "/greenhouse/history", historyItem)) {
+          Serial.println(F("[FIREBASE] Gecmis log kaydi olusturuldu!"));
+        } else {
+          Serial.printf("[HATA] Gecmis log kaydi olusturulamadi: %s\n", fbdoTelemetry.errorReason().c_str());
+        }
+      }
     }
   }
 
