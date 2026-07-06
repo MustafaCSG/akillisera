@@ -185,20 +185,19 @@ function initApp() {
       let offset = 110 - (score / 100) * 110;
       fillEl.style.strokeDashoffset = offset;
 
-      // Determine status and stroke color
+      // Determine status and stroke color (Binary: İyi or Kötü)
       let color = "";
       let statusText = "";
       let badgeClass = "";
+      let badgeText = "";
       if (score >= 75) {
         statusText = "İyi";
+        badgeText = "İyi";
         color = "#2ec4b6"; // Green
         badgeClass = "card-badge badge-normal";
-      } else if (score >= 45) {
-        statusText = "Orta";
-        color = "#ffc107"; // Yellow
-        badgeClass = "card-badge badge-warning";
       } else {
         statusText = "Kötü";
+        badgeText = "Kötü";
         color = "#ff4d4d"; // Red
         badgeClass = "card-badge badge-warning";
       }
@@ -210,11 +209,7 @@ function initApp() {
 
       // Dynamically update the card-badge next to the value
       if (badgeEl) {
-        if (key === "su-tds") {
-          badgeEl.innerText = score >= 75 ? "Optimal" : (score >= 45 ? "Yüksek/Düşük" : "Kritik");
-        } else {
-          badgeEl.innerText = score >= 75 ? "Normal" : (score >= 45 ? "Orta" : "Kritik");
-        }
+        badgeEl.innerText = badgeText;
         badgeEl.className = badgeClass;
       }
     }
@@ -294,7 +289,7 @@ function initApp() {
     }
 
     if (badgeSuSeviyesi) {
-      badgeSuSeviyesi.innerText = isWaterOk ? "Normal" : "Düşük";
+      badgeSuSeviyesi.innerText = isWaterOk ? "İyi" : "Kötü";
       badgeSuSeviyesi.className = isWaterOk ? "card-badge badge-normal" : "card-badge badge-warning";
     }
 
@@ -303,7 +298,7 @@ function initApp() {
     }
 
     if (statusEl) {
-      statusEl.innerText = isWaterOk ? "İyi" : "Kritik";
+      statusEl.innerText = isWaterOk ? "İyi" : "Kötü";
       statusEl.style.color = isWaterOk ? "#2ec4b6" : "#ff4d4d";
     }
 
