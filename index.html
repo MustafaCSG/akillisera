@@ -315,6 +315,48 @@
                   </div>
                 </div>
 
+                <!-- Card: Su Seviyesi -->
+                <div class="sensor-card interactive-sensor-card" id="sensor-card-suSeviyesi">
+                  <div class="card-main-body">
+                    <!-- Left Side: Icon and values -->
+                    <div class="card-body-left">
+                      <div class="card-top">
+                        <div class="sensor-icon-box ph-box" style="background-color: var(--blue-light); color: var(--blue);">
+                          <i data-lucide="layers"></i>
+                        </div>
+                      </div>
+                      <span class="sensor-label">Su Seviyesi</span>
+                      <div class="sensor-value-container">
+                        <span class="sensor-value" id="val-su-seviyesi" style="font-size: 1.4rem;">Yeterli</span>
+                        <span class="card-badge badge-normal" id="badge-su-seviyesi">Normal</span>
+                      </div>
+                    </div>
+
+                    <!-- Right Side: Mini Progress Gauge -->
+                    <div class="card-body-right">
+                      <span class="mini-gauge-title">Depo Durumu</span>
+                      <div class="mini-gauge-wrapper">
+                        <svg viewBox="0 0 100 55" class="mini-gauge-svg">
+                          <path d="M 15 45 A 35 35 0 0 1 32.5 14.7" fill="none" stroke="#ff4d4d" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+                          <path d="M 32.5 14.7 A 35 35 0 0 1 67.5 14.7" fill="none" stroke="#ffc107"
+                            stroke-opacity="0.15" stroke-width="8" />
+                          <path d="M 67.5 14.7 A 35 35 0 0 1 85 45" fill="none" stroke="#2ec4b6" stroke-opacity="0.15"
+                            stroke-width="8" stroke-linecap="round" />
+
+                          <path class="gauge-fill-path" id="gauge-fill-su-seviyesi" d="M 15 45 A 35 35 0 0 1 85 45"
+                            fill="none" stroke="#2ec4b6" stroke-width="8" stroke-linecap="round" stroke-dasharray="110"
+                            stroke-dashoffset="0" />
+                        </svg>
+                        <div class="mini-gauge-text">
+                          <span class="mini-gauge-score" id="score-su-seviyesi">Dolu</span>
+                          <span class="mini-gauge-status" id="status-su-seviyesi">İyi</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </section>
 
@@ -351,7 +393,7 @@
                       <i data-lucide="droplet"></i>
                     </div>
                     <div class="device-text">
-                      <span class="device-name">Pompa 1 (Besin Pompası)</span>
+                      <span class="device-name">Besin A Pompası</span>
                       <span class="device-status" id="status-pompa1">Kapalı</span>
                     </div>
                   </div>
@@ -368,7 +410,7 @@
                       <i data-lucide="refresh-cw"></i>
                     </div>
                     <div class="device-text">
-                      <span class="device-name">Pompa 2 (Su Sirkülasyonu)</span>
+                      <span class="device-name">Ana Su Pompası (Damlama)</span>
                       <span class="device-status" id="status-pompa2">Kapalı</span>
                     </div>
                   </div>
@@ -385,7 +427,7 @@
                       <i data-lucide="test-tube"></i>
                     </div>
                     <div class="device-text">
-                      <span class="device-name">Pompa 3 (pH Dengeleyici)</span>
+                      <span class="device-name">Besin B Pompası</span>
                       <span class="device-status" id="status-pompa3">Kapalı</span>
                     </div>
                   </div>
@@ -936,7 +978,7 @@
                 <div class="test-device-info">
                   <div class="test-device-icon"><i data-lucide="droplet"></i></div>
                   <div class="test-device-text">
-                    <span class="test-device-name">Pompa 1 (Besin Pompası)</span>
+                    <span class="test-device-name">Besin A Pompası</span>
                     <span class="test-device-status" id="test-status-pompa1">Hazır</span>
                   </div>
                 </div>
@@ -950,7 +992,7 @@
                 <div class="test-device-info">
                   <div class="test-device-icon"><i data-lucide="refresh-cw"></i></div>
                   <div class="test-device-text">
-                    <span class="test-device-name">Pompa 2 (Su Sirkülasyonu)</span>
+                    <span class="test-device-name">Ana Su Pompası (Damlama)</span>
                     <span class="test-device-status" id="test-status-pompa2">Hazır</span>
                   </div>
                 </div>
@@ -964,7 +1006,7 @@
                 <div class="test-device-info">
                   <div class="test-device-icon"><i data-lucide="test-tube"></i></div>
                   <div class="test-device-text">
-                    <span class="test-device-name">Pompa 3 (pH Dengeleyici)</span>
+                    <span class="test-device-name">Besin B Pompası</span>
                     <span class="test-device-status" id="test-status-pompa3">Hazır</span>
                   </div>
                 </div>

@@ -61,7 +61,8 @@ function initApp() {
     ortamTemp: 24.8,
     ortamHumid: 62.0,
     suTds: 780,
-    suTemp: 21.5
+    suTemp: 21.5,
+    suSeviyesi: true
   };
 
   // Real-time daily averages (simulated)
@@ -77,7 +78,8 @@ function initApp() {
     ortamTemp: 24.8,
     ortamHumid: 62.0,
     suTds: 780,
-    suTemp: 21.5
+    suTemp: 21.5,
+    suSeviyesi: true
   };
 
   // --- DOM SELECTORS ---
@@ -226,8 +228,58 @@ function initApp() {
     updateSingleGauge("su-temp", waterTempScore, dailyAverages.suTemp);
   }
 
+  // Helper to update Water Level UI dynamically
+  function updateWaterLevelUI() {
+    const elSuSeviyesi = document.getElementById("val-su-seviyesi");
+    const badgeSuSeviyesi = document.getElementById("badge-su-seviyesi");
+    const fillEl = document.getElementById("gauge-fill-su-seviyesi");
+    const scoreEl = document.getElementById("score-su-seviyesi");
+    const statusEl = document.getElementById("status-su-seviyesi");
+    const cardEl = document.getElementById("sensor-card-suSeviyesi");
+
+    if (telemetry.suSeviyesi === undefined) {
+      telemetry.suSeviyesi = true; // default to safe water level
+    }
+
+    const isWaterOk = telemetry.suSeviyesi;
+
+    if (elSuSeviyesi) {
+      elSuSeviyesi.innerText = isWaterOk ? "Yeterli" : "Kritik";
+      elSuSeviyesi.style.color = isWaterOk ? "" : "#ff4d4d";
+    }
+
+    if (badgeSuSeviyesi) {
+      badgeSuSeviyesi.innerText = isWaterOk ? "Normal" : "Düşük";
+      badgeSuSeviyesi.className = isWaterOk ? "card-badge badge-normal" : "card-badge badge-warning";
+    }
+
+    if (scoreEl) {
+      scoreEl.innerText = isWaterOk ? "Dolu" : "Boş";
+    }
+
+    if (statusEl) {
+      statusEl.innerText = isWaterOk ? "İyi" : "Kritik";
+      statusEl.style.color = isWaterOk ? "#2ec4b6" : "#ff4d4d";
+    }
+
+    if (fillEl) {
+      // 100% full is 0 offset, empty is 110 offset
+      fillEl.style.strokeDashoffset = isWaterOk ? 0 : 110;
+      fillEl.style.stroke = isWaterOk ? "#2ec4b6" : "#ff4d4d";
+    }
+
+    if (cardEl) {
+      if (!isWaterOk) {
+        cardEl.classList.add("pulse-alarm-border");
+      } else {
+        cardEl.classList.remove("pulse-alarm-border");
+      }
+    }
+  }
+
   // Initial Comfort Scores calculation
   updateAllGauges();
+  updateWaterLevelUI();
 
   // Helper to dynamically update the profile name based on signed-in user
   function updateProfileUI(email) {
@@ -254,8 +306,10 @@ function initApp() {
         currentUser.email = user.email;
         updateProfileUI(user.email);
         console.log("Oturum açık:", user.email);
+        setupFirebaseListeners(); // Fix: Setup listeners on successful auth
       } else {
         hasSession = false;
+        detachFirebaseListeners(); // Fix: Detach listeners on logout
       }
     });
   }
@@ -702,14 +756,46 @@ function initApp() {
     dailyAverages.suTds = dailyAverages.suTds * 0.92 + telemetry.suTds * 0.08;
     dailyAverages.suTemp = dailyAverages.suTemp * 0.92 + telemetry.suTemp * 0.08;
 
+    // Simulate Water Level draining if pump is running
+    if (!telemetry.hasOwnProperty('waterReserve')) {
+      telemetry.waterReserve = 100;
+    }
+
+    if (switches.pompa1.checked || switches.pompa2.checked || switches.pompa3.checked) {
+      telemetry.waterReserve -= 1.5;
+    } else {
+      telemetry.waterReserve -= 0.05; // natural loss
+    }
+
+    if (telemetry.waterReserve <= 10) {
+      telemetry.suSeviyesi = false;
+      // Safety dry-run shutoff
+      Object.keys(switches).forEach(key => {
+        if ((key === "pompa1" || key === "pompa2" || key === "pompa3") && switches[key].checked) {
+          switches[key].checked = false;
+          handleSwitchChange(key, false, true);
+          showToast("Kuru Çalışma Koruması", "Su yetersiz olduğu için pompalar durduruldu!", "alert-triangle");
+        }
+      });
+
+      if (telemetry.waterReserve <= 0) {
+        telemetry.waterReserve = 100; // Auto-refill simulation
+        telemetry.suSeviyesi = true;
+        showToast("Su Deposu", "Depo otomatik olarak dolduruldu.", "droplet");
+      }
+    } else {
+      telemetry.suSeviyesi = true;
+    }
+
     // Render updated values on screen with premium formatting
     elOrtamTemp.innerText = telemetry.ortamTemp.toFixed(1);
     elOrtamHumid.innerText = Math.round(telemetry.ortamHumid);
     elSuTds.innerText = Math.round(telemetry.suTds);
     elSuTemp.innerText = telemetry.suTemp.toFixed(1);
 
-    // Update comfort health gauges
+    // Update comfort health gauges and water level UI
     updateAllGauges();
+    updateWaterLevelUI();
 
     // Color-code the Water Nutrient Badge according to optimal levels (700 - 850 ppm is optimal)
     if (telemetry.suTds >= 700 && telemetry.suTds <= 850) {
@@ -1228,16 +1314,27 @@ function initApp() {
     safeCreateIcons();
   };
 
-  // --- 11. FIREBASE REALTIME DATABASE LISTENERS ---
-  if (useFirebase) {
-    // 1. Live Telemetry Listener (Pi -> UI)
-    db.ref("greenhouse/telemetry").on("value", (snapshot) => {
+  // --- 11. FIREBASE REALTIME DATABASE LISTENERS (DYNAMIC ENABLING/DISABLING) ---
+  let telemetryRef = null;
+  let settingsRef = null;
+  let actuatorsRef = null;
+
+  function setupFirebaseListeners() {
+    if (!useFirebase || !db) return;
+
+    // Detach any existing listeners first to prevent duplicates
+    detachFirebaseListeners();
+
+    // 1. Live Telemetry Listener (ESP8266 -> Web)
+    telemetryRef = db.ref("greenhouse/telemetry");
+    telemetryRef.on("value", (snapshot) => {
       const data = snapshot.val();
       if (data) {
         if (data.ortamTemp !== undefined) telemetry.ortamTemp = parseFloat(data.ortamTemp);
         if (data.ortamHumid !== undefined) telemetry.ortamHumid = parseFloat(data.ortamHumid);
         if (data.suTds !== undefined) telemetry.suTds = parseFloat(data.suTds);
         if (data.suTemp !== undefined) telemetry.suTemp = parseFloat(data.suTemp);
+        if (data.suSeviyesi !== undefined) telemetry.suSeviyesi = data.suSeviyesi;
         
         // Render values instantly
         elOrtamTemp.innerText = telemetry.ortamTemp.toFixed(1);
@@ -1246,12 +1343,16 @@ function initApp() {
         elSuTemp.innerText = telemetry.suTemp.toFixed(1);
 
         updateAllGauges();
+        updateWaterLevelUI();
         if (typeof checkAlarmTelemetry === 'function') checkAlarmTelemetry();
       }
+    }, (error) => {
+      console.warn("Telemetry listener cancelled:", error.message);
     });
 
-    // 2. Settings Sync Listener (DB -> UI)
-    db.ref("greenhouse/settings").on("value", (snapshot) => {
+    // 2. Settings Sync Listener (DB -> Web)
+    settingsRef = db.ref("greenhouse/settings");
+    settingsRef.on("value", (snapshot) => {
       const data = snapshot.val();
       if (data) {
         if (data.autoMode !== undefined && switchAuto.checked !== data.autoMode) {
@@ -1278,10 +1379,13 @@ function initApp() {
           if (typeof checkAlarmTelemetry === 'function') checkAlarmTelemetry();
         }
       }
+    }, (error) => {
+      console.warn("Settings listener cancelled:", error.message);
     });
 
-    // 3. Actuators State Listener (DB/Pi -> UI)
-    db.ref("greenhouse/actuators").on("value", (snapshot) => {
+    // 3. Actuators State Listener (DB/ESP8266 -> Web)
+    actuatorsRef = db.ref("greenhouse/actuators");
+    actuatorsRef.on("value", (snapshot) => {
       const data = snapshot.val();
       if (data) {
         Object.keys(data).forEach(key => {
@@ -1291,7 +1395,24 @@ function initApp() {
           }
         });
       }
+    }, (error) => {
+      console.warn("Actuators listener cancelled:", error.message);
     });
+  }
+
+  function detachFirebaseListeners() {
+    if (telemetryRef) {
+      telemetryRef.off();
+      telemetryRef = null;
+    }
+    if (settingsRef) {
+      settingsRef.off();
+      settingsRef = null;
+    }
+    if (actuatorsRef) {
+      actuatorsRef.off();
+      actuatorsRef = null;
+    }
   }
 
 }
