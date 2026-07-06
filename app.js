@@ -620,7 +620,7 @@ function initApp() {
     const row = rows[deviceKey];
     const statusText = statuses[deviceKey];
 
-    if (useFirebase && !suppressToast) {
+    if (useFirebase) {
       db.ref("greenhouse/actuators/" + deviceKey).set(isActive);
     }
 
@@ -632,11 +632,11 @@ function initApp() {
       // Customize feedback toasts
       if (!suppressToast) {
         if (deviceKey === "pompa1") {
-          showToast("Besin Pompası", "Pompa 1 çalıştırıldı. Besleme başladı.", "droplet");
+          showToast("Besin A Pompası", "Besin A Pompası çalıştırıldı. Besleme başladı.", "droplet");
         } else if (deviceKey === "pompa2") {
-          showToast("Sirkülasyon Pompası", "Pompa 2 çalıştırıldı. Su devirdaimi aktif.", "refresh-cw");
+          showToast("Ana Su Pompası", "Ana Su Pompası (Damlama) çalıştırıldı. Sulama başladı.", "refresh-cw");
         } else if (deviceKey === "pompa3") {
-          showToast("pH Dengeleyici", "Pompa 3 çalıştırıldı. pH seviyesi kontrol ediliyor.", "test-tube");
+          showToast("Besin B Pompası", "Besin B Pompası çalıştırıldı. Besleme başladı.", "test-tube");
         } else if (deviceKey === "fan") {
           showToast("Havalandırma Aktif", "Vantilatörler çalıştırıldı, sera içi serinletiliyor.", "fan");
         } else if (deviceKey === "led") {
@@ -650,9 +650,9 @@ function initApp() {
 
       // Off notifications
       if (!suppressToast) {
-        if (deviceKey === "pompa1") showToast("Pompa Durduruldu", "Besin Pompası kapatıldı.", "droplet");
-        if (deviceKey === "pompa2") showToast("Sirkülasyon Durduruldu", "Pompa 2 kapatıldı.", "refresh-cw");
-        if (deviceKey === "pompa3") showToast("pH Pompası Durduruldu", "Pompa 3 kapatıldı.", "test-tube");
+        if (deviceKey === "pompa1") showToast("Besin A Durduruldu", "Besin A Pompası kapatıldı.", "droplet");
+        if (deviceKey === "pompa2") showToast("Ana Su Durduruldu", "Ana Su Pompası (Damlama) kapatıldı.", "refresh-cw");
+        if (deviceKey === "pompa3") showToast("Besin B Durduruldu", "Besin B Pompası kapatıldı.", "test-tube");
         if (deviceKey === "fan") showToast("Fanlar Kapatıldı", "Havalandırma durduruldu.", "fan");
         if (deviceKey === "led") showToast("LED Kapatıldı", "Yapay aydınlatma kapatıldı.", "sun");
       }
@@ -964,9 +964,9 @@ function initApp() {
     const action = document.getElementById(`test-action-${key}`);
 
     const deviceNames = {
-      pompa1: "Pompa 1 (Besin Pompası)",
-      pompa2: "Pompa 2 (Su Sirkülasyonu)",
-      pompa3: "Pompa 3 (pH Dengeleyici)",
+      pompa1: "Besin A Pompası",
+      pompa2: "Ana Su Pompası (Damlama)",
+      pompa3: "Besin B Pompası",
       fan: "Fan Sistemi (Havalandırma)",
       led: "LED Aydınlatma (Gelişim Işığı)"
     };
@@ -1048,9 +1048,9 @@ function initApp() {
     const action = document.getElementById(`test-action-${key}`);
 
     const deviceNames = {
-      pompa1: "Pompa 1 (Besin Pompası)",
-      pompa2: "Pompa 2 (Su Sirkülasyonu)",
-      pompa3: "Pompa 3 (pH Dengeleyici)",
+      pompa1: "Besin A Pompası",
+      pompa2: "Ana Su Pompası (Damlama)",
+      pompa3: "Besin B Pompası",
       fan: "Fan Sistemi (Havalandırma)",
       led: "LED Aydınlatma (Gelişim Işığı)"
     };
