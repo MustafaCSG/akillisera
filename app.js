@@ -155,6 +155,20 @@ function initApp() {
     const badgeEl = document.getElementById("badge-" + key);
 
     if (fillEl && scoreEl && statusEl) {
+      // Handle disconnected sensor values
+      if (isNaN(averageVal) || isNaN(score) || averageVal <= -99 || score < 0) {
+        scoreEl.innerText = "--";
+        statusEl.innerText = "Yok";
+        statusEl.style.color = "var(--text-muted)";
+        fillEl.style.strokeDashoffset = 110;
+        fillEl.style.stroke = "rgba(255, 255, 255, 0.1)";
+        if (badgeEl) {
+          badgeEl.innerText = "Bağlantı Yok";
+          badgeEl.className = "card-badge badge-warning";
+        }
+        return;
+      }
+      
       // Format average value to display in the gauge center (no percentages unless it's humidity!)
       if (key === "ortam-temp" || key === "su-temp") {
         scoreEl.innerText = averageVal.toFixed(1) + "°";
@@ -242,6 +256,28 @@ function initApp() {
     }
 
     const isWaterOk = telemetry.suSeviyesi;
+
+    if (isWaterOk === "N/A" || isWaterOk === null || isWaterOk === undefined) {
+      if (elSuSeviyesi) {
+        elSuSeviyesi.innerText = "Bağlantı Yok";
+        elSuSeviyesi.style.color = "var(--text-muted)";
+      }
+      if (badgeSuSeviyesi) {
+        badgeSuSeviyesi.innerText = "Bağlantı Yok";
+        badgeSuSeviyesi.className = "card-badge badge-warning";
+      }
+      if (scoreEl) scoreEl.innerText = "--";
+      if (statusEl) {
+        statusEl.innerText = "Yok";
+        statusEl.style.color = "var(--text-muted)";
+      }
+      if (fillEl) {
+        fillEl.style.strokeDashoffset = 110;
+        fillEl.style.stroke = "rgba(255, 255, 255, 0.1)";
+      }
+      if (cardEl) cardEl.classList.remove("pulse-alarm-border");
+      return;
+    }
 
     if (elSuSeviyesi) {
       elSuSeviyesi.innerText = isWaterOk ? "Yeterli" : "Kritik";
@@ -1123,10 +1159,10 @@ function initApp() {
     const lblTds = document.getElementById("lbl-current-suTds");
     const lblWaterTemp = document.getElementById("lbl-current-suTemp");
 
-    if (lblTemp) lblTemp.innerText = telemetry.ortamTemp.toFixed(1) + "°C";
-    if (lblHumid) lblHumid.innerText = "%" + Math.round(telemetry.ortamHumid);
-    if (lblTds) lblTds.innerText = Math.round(telemetry.suTds) + " ppm";
-    if (lblWaterTemp) lblWaterTemp.innerText = telemetry.suTemp.toFixed(1) + "°C";
+    if (lblTemp) lblTemp.innerText = (isNaN(telemetry.ortamTemp) || telemetry.ortamTemp <= -99) ? "Bağlantı Yok" : telemetry.ortamTemp.toFixed(1) + "°C";
+    if (lblHumid) lblHumid.innerText = (isNaN(telemetry.ortamHumid) || telemetry.ortamHumid <= -99) ? "Bağlantı Yok" : "%" + Math.round(telemetry.ortamHumid);
+    if (lblTds) lblTds.innerText = (isNaN(telemetry.suTds) || telemetry.suTds < 0) ? "Bağlantı Yok" : Math.round(telemetry.suTds) + " ppm";
+    if (lblWaterTemp) lblWaterTemp.innerText = (isNaN(telemetry.suTemp) || telemetry.suTemp <= -127) ? "Bağlantı Yok" : telemetry.suTemp.toFixed(1) + "°C";
 
     // 2. Perform threshold boundary evaluations
     const params = [
@@ -1147,12 +1183,20 @@ function initApp() {
       let isViolated = false;
       let reason = "";
 
-      if (p.val < minLimit) {
-        isViolated = true;
-        reason = "düşük";
-      } else if (p.val > maxLimit) {
-        isViolated = true;
-        reason = "yüksek";
+      const isValid = !isNaN(p.val) && p.val !== "N/A" && 
+                      !(p.key === "ortamTemp" && p.val <= -99) &&
+                      !(p.key === "ortamHumid" && p.val <= -99) &&
+                      !(p.key === "suTemp" && p.val <= -127) &&
+                      !(p.key === "suTds" && p.val < 0);
+
+      if (isValid) {
+        if (p.val < minLimit) {
+          isViolated = true;
+          reason = "düşük";
+        } else if (p.val > maxLimit) {
+          isViolated = true;
+          reason = "yüksek";
+        }
       }
 
       if (isViolated) {
@@ -1336,11 +1380,11 @@ function initApp() {
         if (data.suTemp !== undefined) telemetry.suTemp = parseFloat(data.suTemp);
         if (data.suSeviyesi !== undefined) telemetry.suSeviyesi = data.suSeviyesi;
         
-        // Render values instantly
-        elOrtamTemp.innerText = telemetry.ortamTemp.toFixed(1);
-        elOrtamHumid.innerText = Math.round(telemetry.ortamHumid);
-        elSuTds.innerText = Math.round(telemetry.suTds);
-        elSuTemp.innerText = telemetry.suTemp.toFixed(1);
+        // Render values instantly with "Bağlantı Yok" fallback
+        elOrtamTemp.innerText = (data.ortamTemp === "N/A" || isNaN(telemetry.ortamTemp) || telemetry.ortamTemp <= -99) ? "Bağlantı Yok" : telemetry.ortamTemp.toFixed(1) + "°C";
+        elOrtamHumid.innerText = (data.ortamHumid === "N/A" || isNaN(telemetry.ortamHumid) || telemetry.ortamHumid <= -99) ? "Bağlantı Yok" : "%" + Math.round(telemetry.ortamHumid);
+        elSuTds.innerText = (data.suTds === "N/A" || isNaN(telemetry.suTds) || telemetry.suTds < 0) ? "Bağlantı Yok" : Math.round(telemetry.suTds) + " ppm";
+        elSuTemp.innerText = (data.suTemp === "N/A" || isNaN(telemetry.suTemp) || telemetry.suTemp <= -127) ? "Bağlantı Yok" : telemetry.suTemp.toFixed(1) + "°C";
 
         updateAllGauges();
         updateWaterLevelUI();
