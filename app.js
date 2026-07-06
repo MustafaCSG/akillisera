@@ -64,6 +64,7 @@ function initApp() {
     suTemp: 21.5,
     suSeviyesi: true
   };
+  let prevSuSeviyesi = true;
 
   // Real-time daily averages (simulated)
   let dailyAverages = {
@@ -279,6 +280,14 @@ function initApp() {
       return;
     }
 
+    // Check transition for browser notification!
+    if (prevSuSeviyesi === true && isWaterOk === false) {
+      sendBrowserNotification("🚨 Sera Su Seviyesi Kritik!", "Depodaki su seviyesi kritik düzeye ulaştı! Tüm pompalar koruma amaçlı durduruldu.");
+    } else if (prevSuSeviyesi === false && isWaterOk === true) {
+      sendBrowserNotification("💧 Sera Deposu Dolduruldu", "Depo su seviyesi normale döndü.");
+    }
+    prevSuSeviyesi = isWaterOk;
+
     if (elSuSeviyesi) {
       elSuSeviyesi.innerText = isWaterOk ? "Yeterli" : "Kritik";
       elSuSeviyesi.style.color = isWaterOk ? "" : "#ff4d4d";
@@ -364,6 +373,12 @@ function initApp() {
 
   // --- 2. LOGIN & LOGOUT FLOW ---
   btnLogin.addEventListener("click", () => {
+    // Request browser notification permission on user click gesture
+    if ("Notification" in window) {
+      Notification.requestPermission().then(permission => {
+        console.log("Bildirim izni:", permission);
+      });
+    }
     const emailVal = document.getElementById("email").value;
     const passwordVal = document.getElementById("password").value;
 
@@ -474,6 +489,22 @@ function initApp() {
     toastTimeout = setTimeout(() => {
       toastContainer.classList.remove("active");
     }, 3200);
+  }
+
+  // Browser Push Notification Helper
+  function sendBrowserNotification(title, body) {
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        try {
+          new Notification(title, {
+            body: body,
+            icon: "favicon.ico"
+          });
+        } catch (e) {
+          console.warn("Failed to trigger Notification:", e);
+        }
+      }
+    }
   }
 
 
@@ -1214,6 +1245,10 @@ function initApp() {
             `${p.name} limit dışı: ${p.val.toFixed(p.key === "suTds" || p.key === "ortamHumid" ? 0 : 1)}${p.unit}!`, 
             "alert-triangle"
           );
+          sendBrowserNotification(
+            `⚠️ Kritik Eşik Aşımı: ${p.name}`, 
+            `Sera içi ${p.name} sınırların dışında! Anlık Değer: ${p.val.toFixed(p.key === "suTds" || p.key === "ortamHumid" ? 0 : 1)}${p.unit}`
+          );
         }
       } else {
         // Remove highlight
@@ -1223,6 +1258,10 @@ function initApp() {
         if (activeAlarms[p.key]) {
           activeAlarms[p.key] = false;
           showToast("Durum Normale Döndü", `${p.name} stabil limitlere girdi.`, "check-circle");
+          sendBrowserNotification(
+            `✅ Eşik Normale Döndü: ${p.name}`, 
+            `Sera içi ${p.name} tekrar güvenli limitler içine girdi. Anlık Değer: ${p.val.toFixed(p.key === "suTds" || p.key === "ortamHumid" ? 0 : 1)}${p.unit}`
+          );
         }
       }
     });
